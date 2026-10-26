@@ -40,7 +40,8 @@ import it.luca.sveglia.word.WordOfTheDay;
 public class BriefingAudioWorker extends Worker {
 
     private static final String TAG = "BriefingAudioWorker";
-    private static final String WORK_NAME = "briefing_audio";
+    private static final String WORK_PREFIX = "briefing_audio_";
+    private static final String KEY_ALARM_ID = "alarm_id";
     private static final String KEY_ALARM_AT = "alarm_at";
     private static final String CHANNEL_ID = "briefing_prefetch";
     private static final int NOTIFICATION_ID = 2;
@@ -50,10 +51,13 @@ public class BriefingAudioWorker extends Worker {
         super(context, params);
     }
 
-    /** Accoda la preparazione del briefing per la sveglia delle alarmAtMillis (sostituisce quella precedente). */
-    public static void enqueue(Context context, long alarmAtMillis) {
+    /** Accoda la preparazione del briefing della sveglia alarmId che suona alle alarmAtMillis. */
+    public static void enqueue(Context context, long alarmId, long alarmAtMillis) {
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(BriefingAudioWorker.class)
-                .setInputData(new Data.Builder().putLong(KEY_ALARM_AT, alarmAtMillis).build())
+                .setInputData(new Data.Builder()
+                        .putLong(KEY_ALARM_ID, alarmId)
+                        .putLong(KEY_ALARM_AT, alarmAtMillis)
+                        .build())
                 .setConstraints(new Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build())
@@ -61,11 +65,11 @@ public class BriefingAudioWorker extends Worker {
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build();
         WorkManager.getInstance(context)
-                .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, request);
+                .enqueueUniqueWork(WORK_PREFIX + alarmId, ExistingWorkPolicy.REPLACE, request);
     }
 
-    public static void cancel(Context context) {
-        WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME);
+    public static void cancel(Context context, long alarmId) {
+        WorkManager.getInstance(context).cancelUniqueWork(WORK_PREFIX + alarmId);
     }
 
     @NonNull
@@ -75,6 +79,7 @@ public class BriefingAudioWorker extends Worker {
         if (!AlarmPrefs.isNaturalVoice(context) || !CloudTtsClient.hasApiKey()) {
             return Result.success();
         }
+        long alarmId = getInputData().getLong(KEY_ALARM_ID, 0);
         long alarmAt = getInputData().getLong(KEY_ALARM_AT, 0);
         LocalDateTime when = LocalDateTime.ofInstant(Instant.ofEpochMilli(alarmAt), ZoneId.systemDefault());
 
@@ -83,9 +88,9 @@ public class BriefingAudioWorker extends Worker {
                 new WeatherRepository().fetchToday(),
                 WordOfTheDay.forDate(context, when.toLocalDate()));
 
-        File out = BriefingCache.file(context);
+        File out = BriefingCache.file(context, alarmId);
         if (new CloudTtsClient(context).synthesizeToFile(text, AlarmPrefs.getVoice(context), out)) {
-            BriefingCache.markReady(context, alarmAt);
+            BriefingCache.markReady(context, alarmId, alarmAt);
             return Result.success();
         }
         Log.w(TAG, "Briefing non preparato (tentativo " + (getRunAttemptCount() + 1) + ")");

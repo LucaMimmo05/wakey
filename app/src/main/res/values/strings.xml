@@ -1,12 +1,19 @@
 <resources>
     <string name="app_name">Wakey</string>
 
-    <string name="no_alarm">Nessuna sveglia impostata</string>
-    <string name="alarm_set_at">Sveglia impostata alle %1$s</string>
-    <string name="set_in_one_minute">Imposta sveglia tra 1 minuto</string>
-    <string name="pick_time">Scegli orario</string>
+    <string name="no_alarms">Nessuna sveglia.\nTocca \"Nuova sveglia\" per aggiungerne una.</string>
+    <string name="new_alarm">Nuova sveglia</string>
+    <string name="test_alarm">Sveglia di prova tra 1 minuto</string>
+    <string name="test_alarm_label">Prova</string>
+    <string name="settings">Impostazioni</string>
+    <string name="edit_alarm">Modifica sveglia</string>
+    <string name="back">Indietro</string>
     <string name="pick_time_title">Orario della sveglia</string>
-    <string name="cancel_alarm">Annulla sveglia</string>
+    <string name="label_hint">Etichetta (facoltativa)</string>
+    <string name="repeat_label">Ripeti</string>
+    <string name="save">Salva</string>
+    <string name="delete">Elimina sveglia</string>
+    <string name="alarm_details">%1$s · %2$s</string>
 
     <string name="sound_label">Suono della sveglia</string>
     <string name="sound_default">Suono sveglia predefinito</string>
@@ -19,9 +26,8 @@
     <string name="voice_hint">Voce</string>
     <string name="voice_key_missing">Chiave API di Google Cloud non impostata: verrà usata la voce di sistema.</string>
 
-    <string name="permission_title">Permesso necessario</string>
-    <string name="permission_exact_alarm">Per suonare all\'orario esatto la sveglia ha bisogno del permesso \"Sveglie e promemoria\". Attivalo nella pagina che si aprirà.</string>
-    <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\". Attivalo nella pagina che si aprirà.</string>
+    <string name="permission_exact_alarm">Per suonare all\'orario esatto Wakey ha bisogno del permesso \"Sveglie e promemoria\". Senza, le sveglie non suonano.</string>
+    <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\".</string>
     <string name="open_settings">Apri impostazioni</string>
 
     <string name="dismiss">Spegni</string>

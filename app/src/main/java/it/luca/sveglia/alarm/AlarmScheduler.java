@@ -4,27 +4,27 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.tts.BriefingAudioWorker;
 import it.luca.sveglia.tts.BriefingCache;
 import it.luca.sveglia.ui.MainActivity;
 
 /**
- * Programma e annulla la sveglia con AlarmManager.setAlarmClock, l'unico tipo di
+ * Programma e annulla le sveglie con AlarmManager.setAlarmClock, l'unico tipo di
  * allarme che il sistema rispetta al minuto anche in Doze e con l'app chiusa.
- * Insieme alla sveglia programma il prefetch del briefing con voce naturale, 10 minuti prima.
- * Per ora gestisce una sola sveglia; l'orario viene salvato nelle preferenze
- * solo per mostrarlo nella schermata principale.
+ * Insieme a ogni sveglia programma il prefetch del briefing con voce naturale, 10 minuti prima.
+ * Ogni sveglia usa il proprio id come requestCode, così i PendingIntent non si sovrascrivono.
  */
 public final class AlarmScheduler {
 
-    private static final String PREFS = "alarm";
-    private static final String KEY_TRIGGER_AT = "trigger_at";
-    private static final int REQUEST_ALARM = 1;
-    private static final int REQUEST_SHOW = 2;
-    private static final int REQUEST_PREFETCH = 3;
+    static final String EXTRA_ALARM_ID = "alarm_id";
+    static final String EXTRA_ALARM_AT = "alarm_at";
     private static final long PREFETCH_BEFORE_MS = 10 * 60 * 1000L;
 
     private AlarmScheduler() {
@@ -38,68 +38,79 @@ public final class AlarmScheduler {
         return context.getSystemService(AlarmManager.class).canScheduleExactAlarms();
     }
 
-    public static void schedule(Context context, long triggerAtMillis) {
-        AlarmManager am = context.getSystemService(AlarmManager.class);
-        // Intent mostrato quando l'utente tocca la sveglia nella barra di stato
-        PendingIntent show = PendingIntent.getActivity(context, REQUEST_SHOW,
-                new Intent(context, MainActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        am.setAlarmClock(new AlarmManager.AlarmClockInfo(triggerAtMillis, show), alarmIntent(context));
-        prefs(context).edit().putLong(KEY_TRIGGER_AT, triggerAtMillis).apply();
-        schedulePrefetch(context, triggerAtMillis);
+    /** Programma la prossima occorrenza della sveglia, o la annulla se è disattivata. */
+    public static void schedule(Context context, AlarmEntity alarm) {
+        schedule(context, alarm, System.currentTimeMillis());
     }
 
-    public static void cancel(Context context) {
+    /** Come schedule, cercando la prossima occorrenza dopo fromMillis. */
+    public static void schedule(Context context, AlarmEntity alarm, long fromMillis) {
+        if (!alarm.enabled) {
+            cancel(context, alarm.id);
+            return;
+        }
+        if (!canScheduleExact(context)) {
+            // Senza permesso setAlarmClock lancerebbe SecurityException: la schermata principale lo chiede
+            return;
+        }
+        long triggerAt = nextTrigger(alarm, fromMillis);
         AlarmManager am = context.getSystemService(AlarmManager.class);
-        am.cancel(alarmIntent(context));
-        am.cancel(prefetchIntent(context, 0));
-        BriefingAudioWorker.cancel(context);
-        BriefingCache.clear(context);
-        clearSaved(context);
+        // Intent mostrato quando l'utente tocca la sveglia nella barra di stato
+        PendingIntent show = PendingIntent.getActivity(context, 0,
+                new Intent(context, MainActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        am.setAlarmClock(new AlarmManager.AlarmClockInfo(triggerAt, show),
+                alarmIntent(context, alarm.id));
+        schedulePrefetch(context, alarm.id, triggerAt);
+    }
+
+    public static void cancel(Context context, long alarmId) {
+        AlarmManager am = context.getSystemService(AlarmManager.class);
+        am.cancel(alarmIntent(context, alarmId));
+        am.cancel(prefetchIntent(context, alarmId, 0));
+        BriefingAudioWorker.cancel(context, alarmId);
+        BriefingCache.clear(context, alarmId);
+    }
+
+    /** Millisecondi della prossima occorrenza dopo fromMillis, nel fuso orario del telefono. */
+    public static long nextTrigger(AlarmEntity alarm, long fromMillis) {
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime from = LocalDateTime.ofInstant(Instant.ofEpochMilli(fromMillis), zone);
+        return NextAlarm.after(from, alarm.hour, alarm.minute, alarm.days)
+                .atZone(zone).toInstant().toEpochMilli();
     }
 
     /**
      * Prepara l'audio del briefing 10 minuti prima della sveglia. Se mancano meno
-     * di 10 minuti (es. "tra 1 minuto") lo prepara subito.
+     * di 10 minuti lo prepara subito.
      */
-    private static void schedulePrefetch(Context context, long triggerAtMillis) {
-        BriefingCache.clear(context);
-        long prefetchAt = triggerAtMillis - PREFETCH_BEFORE_MS;
+    private static void schedulePrefetch(Context context, long alarmId, long triggerAt) {
+        BriefingCache.clear(context, alarmId);
+        AlarmManager am = context.getSystemService(AlarmManager.class);
+        long prefetchAt = triggerAt - PREFETCH_BEFORE_MS;
         if (prefetchAt <= System.currentTimeMillis()) {
-            // Toglie un eventuale prefetch di una sveglia precedente, che riscriverebbe il file
-            context.getSystemService(AlarmManager.class).cancel(prefetchIntent(context, 0));
-            BriefingAudioWorker.enqueue(context, triggerAtMillis);
+            // Toglie un eventuale prefetch di un orario precedente, che riscriverebbe il file
+            am.cancel(prefetchIntent(context, alarmId, 0));
+            BriefingAudioWorker.enqueue(context, alarmId, triggerAt);
             return;
         }
         // AllowWhileIdle: scatta anche in Doze, a telefono bloccato da ore
-        context.getSystemService(AlarmManager.class).setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP, prefetchAt, prefetchIntent(context, triggerAtMillis));
+        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, prefetchAt,
+                prefetchIntent(context, alarmId, triggerAt));
     }
 
-    /** Orario della sveglia programmata, oppure 0 se non ce n'è. */
-    public static long getScheduled(Context context) {
-        long at = prefs(context).getLong(KEY_TRIGGER_AT, 0);
-        return at > System.currentTimeMillis() ? at : 0;
-    }
-
-    static void clearSaved(Context context) {
-        prefs(context).edit().remove(KEY_TRIGGER_AT).apply();
-    }
-
-    private static PendingIntent alarmIntent(Context context) {
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        return PendingIntent.getBroadcast(context, REQUEST_ALARM, intent,
+    private static PendingIntent alarmIntent(Context context, long alarmId) {
+        Intent intent = new Intent(context, AlarmReceiver.class)
+                .putExtra(EXTRA_ALARM_ID, alarmId);
+        return PendingIntent.getBroadcast(context, (int) alarmId, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
-    private static PendingIntent prefetchIntent(Context context, long triggerAtMillis) {
+    private static PendingIntent prefetchIntent(Context context, long alarmId, long triggerAt) {
         Intent intent = new Intent(context, PrefetchReceiver.class)
-                .putExtra(PrefetchReceiver.EXTRA_ALARM_AT, triggerAtMillis);
-        return PendingIntent.getBroadcast(context, REQUEST_PREFETCH, intent,
+                .putExtra(EXTRA_ALARM_ID, alarmId)
+                .putExtra(EXTRA_ALARM_AT, triggerAt);
+        return PendingIntent.getBroadcast(context, (int) alarmId, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-    }
-
-    private static SharedPreferences prefs(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 }

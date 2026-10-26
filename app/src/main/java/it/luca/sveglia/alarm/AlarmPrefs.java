@@ -7,27 +7,14 @@ import android.net.Uri;
 
 import it.luca.sveglia.tts.Voices;
 
-/** Preferenze della sveglia: suono e voce del briefing. */
+/** Impostazioni generali: suono predefinito e voce del briefing (il suono di ogni sveglia sta nel database). */
 public final class AlarmPrefs {
 
     private static final String PREFS = "settings";
-    private static final String KEY_SOUND_URI = "sound_uri";
     private static final String KEY_NATURAL_VOICE = "natural_voice";
     private static final String KEY_VOICE = "voice";
 
     private AlarmPrefs() {
-    }
-
-    /** Suono scelto dall'utente, oppure null per usare il suono sveglia di sistema. */
-    public static Uri getSoundUri(Context context) {
-        String uri = prefs(context).getString(KEY_SOUND_URI, null);
-        return uri != null ? Uri.parse(uri) : null;
-    }
-
-    public static void setSoundUri(Context context, Uri uri) {
-        prefs(context).edit()
-                .putString(KEY_SOUND_URI, uri != null ? uri.toString() : null)
-                .apply();
     }
 
     /** Suono predefinito del telefono per le sveglie (o la suoneria se non ce n'è uno). */

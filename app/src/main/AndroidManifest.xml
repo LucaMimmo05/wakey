@@ -11,6 +11,7 @@
     <!-- Solo prima di Android 12: il prefetch con WorkManager gira come foreground service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Da Android 11 serve per trovare il motore di sintesi vocale di sistema -->
     <queries>
@@ -36,6 +37,15 @@
         </activity>
 
         <activity
+            android:name=".ui.AlarmEditActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.RingingActivity"
             android:excludeFromRecents="true"
             android:exported="false"
@@ -50,6 +60,18 @@
         <receiver
             android:name=".alarm.PrefetchReceiver"
             android:exported="false" />
+
+        <!-- Broadcast di sistema protetti: solo il sistema può inviarli -->
+        <receiver
+            android:name=".alarm.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Il foreground service interno di WorkManager deve dichiarare il tipo (Android 14+) -->
         <service

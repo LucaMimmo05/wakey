@@ -52,6 +52,8 @@ public class AlarmService extends Service {
 
     public static final String ACTION_RING = "it.luca.sveglia.action.RING";
     public static final String ACTION_DISMISS = "it.luca.sveglia.action.DISMISS";
+    private static final String EXTRA_ALARM_ID = "alarm_id";
+    private static final String EXTRA_SOUND_URI = "sound_uri";
     /** Inviato all'interno dell'app per chiudere la schermata di squillo. */
     public static final String ACTION_RINGING_FINISHED = "it.luca.sveglia.action.RINGING_FINISHED";
 
@@ -72,6 +74,7 @@ public class AlarmService extends Service {
     private BriefingSpeaker speaker;
     private PowerManager.WakeLock wakeLock;
     private boolean ringing;
+    private long alarmId;
     private AudioFocusRequest focusRequest;
 
     // Rete e lettura file fuori dal main thread
@@ -84,13 +87,13 @@ public class AlarmService extends Service {
         String action = intent != null ? intent.getAction() : null;
         if (ACTION_DISMISS.equals(action)) {
             dismiss();
-        } else {
-            ring();
+        } else if (intent != null) {
+            ring(intent.getLongExtra(EXTRA_ALARM_ID, 0), intent.getStringExtra(EXTRA_SOUND_URI));
         }
         return START_NOT_STICKY;
     }
 
-    private void ring() {
+    private void ring(long alarmId, String soundUri) {
         // startForeground va chiamato subito, altrimenti il sistema chiude il servizio
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildRingingNotification(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
@@ -98,6 +101,7 @@ public class AlarmService extends Service {
             return;
         }
         ringing = true;
+        this.alarmId = alarmId;
 
         PowerManager pm = getSystemService(PowerManager.class);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sveglia:alarm");
@@ -107,7 +111,7 @@ public class AlarmService extends Service {
         speaker = new BriefingSpeaker(this);
         weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday());
         requestAudioFocus();
-        startSound();
+        startSound(soundUri != null ? Uri.parse(soundUri) : null);
         scheduleBriefing(SystemClock.uptimeMillis() + BRIEFING_DELAY_MS);
     }
 
@@ -131,7 +135,7 @@ public class AlarmService extends Service {
                 // Finita la voce la sveglia continua a suonare a volume pieno
                 Runnable restoreMusic = () -> setVolume(1f);
                 File natural = AlarmPrefs.isNaturalVoice(this)
-                        ? BriefingCache.validFile(this, System.currentTimeMillis()) : null;
+                        ? BriefingCache.validFile(this, alarmId, System.currentTimeMillis()) : null;
                 if (natural == null || !playVoiceFile(natural, restoreMusic)) {
                     speaker.speak(text, restoreMusic);
                 }
@@ -156,8 +160,7 @@ public class AlarmService extends Service {
     }
 
     /** Suona il brano scelto; se non si riesce (file cancellato, permesso perso) usa il suono predefinito. */
-    private void startSound() {
-        Uri chosen = AlarmPrefs.getSoundUri(this);
+    private void startSound(Uri chosen) {
         if (chosen != null && play(chosen)) {
             return;
         }
@@ -313,6 +316,14 @@ public class AlarmService extends Service {
         channel.setSound(null, null);
         channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
+    }
+
+    /** Intent per far suonare la sveglia alarmId con il suono indicato (null = predefinito). */
+    public static Intent ringIntent(Context context, long alarmId, String soundUri) {
+        return new Intent(context, AlarmService.class)
+                .setAction(ACTION_RING)
+                .putExtra(EXTRA_ALARM_ID, alarmId)
+                .putExtra(EXTRA_SOUND_URI, soundUri);
     }
 
     /** Avvia lo spegnimento della sveglia (usato dalla schermata di squillo). */
