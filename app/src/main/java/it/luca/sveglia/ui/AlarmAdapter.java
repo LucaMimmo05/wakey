@@ -28,7 +28,7 @@ import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.util.Days;
 import it.luca.sveglia.util.TimeFormat;
 
-/** Card della lista sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore. */
+/** Righe del gruppo sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore. */
 class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
 
     interface OnClick {
@@ -62,12 +62,14 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         AlarmEntity alarm = getItem(position);
         Context context = holder.itemView.getContext();
         holder.time.setText(TimeFormat.display(alarm.hour, alarm.minute));
-        String days = Days.describe(alarm.days);
-        holder.label.setText(TextUtils.isEmpty(alarm.label) ? days
-                : context.getString(R.string.alarm_details, alarm.label, days));
-        holder.days.setText(dayLetters(context, alarm.days));
+        holder.label.setText(alarm.label);
+        holder.label.setVisibility(TextUtils.isEmpty(alarm.label) ? View.GONE : View.VISIBLE);
+        holder.days.setTextColor(MaterialColors.getColor(holder.days,
+                com.google.android.material.R.attr.colorOnSurfaceVariant));
+        holder.days.setText(alarm.isRepeating() ? dayLetters(context, alarm.days)
+                : context.getString(R.string.once));
         // Le sveglie spente restano visibili ma sbiadite
-        holder.content.setAlpha(alarm.enabled ? 1f : 0.45f);
+        holder.content.setAlpha(alarm.enabled ? 1f : 0.4f);
         holder.itemView.setOnClickListener(v -> onClick.onClick(alarm));
         // Il listener va tolto prima di setChecked, altrimenti il riciclo delle righe lo farebbe scattare
         holder.enabled.setOnCheckedChangeListener(null);
@@ -75,10 +77,10 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         holder.enabled.setOnCheckedChangeListener((button, checked) -> onToggle.onToggle(alarm, checked));
     }
 
-    /** "L M M G V S D" con i giorni attivi in evidenza; per le sveglie singole tutti spenti. */
+    /** "L M M G V S D" con i giorni attivi in blu e gli altri appena visibili. */
     private static CharSequence dayLetters(Context context, int mask) {
         int on = MaterialColors.getColor(context, androidx.appcompat.R.attr.colorPrimary, 0);
-        int off = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOutline, 0);
+        int off = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOutlineVariant, 0);
         SpannableStringBuilder text = new SpannableStringBuilder();
         for (int i = 0; i < 7; i++) {
             int start = text.length();

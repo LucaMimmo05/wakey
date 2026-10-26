@@ -27,6 +27,14 @@ public class RelativeTimeTest {
     }
 
     @Test
+    public void durationInWords() {
+        assertEquals("8 ore e 12 minuti", RelativeTime.durationLong(NOW, LocalDateTime.of(2026, 10, 27, 7, 0)));
+        assertEquals("1 ora e 1 minuto", RelativeTime.durationLong(NOW, NOW.plusMinutes(61)));
+        assertEquals("5 minuti", RelativeTime.durationLong(NOW, NOW.plusMinutes(5)));
+        assertEquals("2 ore", RelativeTime.durationLong(NOW, NOW.plusHours(2)));
+    }
+
+    @Test
     public void greetings() {
         assertEquals("Buongiorno", RelativeTime.greeting(7));
         assertEquals("Buonasera", RelativeTime.greeting(22));

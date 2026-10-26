@@ -1,22 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tema scuro: cielo notturno -->
-    <color name="brand_primary">#FFFF9A5C</color>
-    <color name="brand_on_primary">#FF3A1300</color>
-    <color name="brand_primary_container">#FF7A3110</color>
-    <color name="brand_on_primary_container">#FFFFDBC9</color>
-    <color name="brand_secondary">#FFD6B4F0</color>
-    <color name="brand_on_secondary">#FF3B1A4A</color>
-    <color name="brand_secondary_container">#FF4E2D5E</color>
-    <color name="brand_on_secondary_container">#FFF2DAFF</color>
-    <color name="brand_background">#FF120E26</color>
-    <color name="brand_on_background">#FFF1ECFF</color>
-    <color name="brand_surface">#FF120E26</color>
-    <color name="brand_on_surface">#FFF1ECFF</color>
-    <color name="brand_surface_variant">#FF2A2350</color>
-    <color name="brand_on_surface_variant">#FFB9B0D9</color>
-    <color name="brand_surface_container">#FF1D1838</color>
-    <color name="brand_surface_container_high">#FF262046</color>
-    <color name="brand_outline">#FF4A4272</color>
-    <color name="brand_error">#FFFFB4AB</color>
+    <!-- One UI scuro: nero vero, card grigio molto scuro -->
+    <color name="ui_accent">#FF5C9BFF</color>
+    <color name="ui_on_accent">#FF001A40</color>
+    <color name="ui_accent_container">#FF173A73</color>
+    <color name="ui_on_accent_container">#FFDCE8FF</color>
+    <color name="ui_background">#FF000000</color>
+    <color name="ui_card">#FF1A1A1C</color>
+    <color name="ui_text">#FFF4F4F6</color>
+    <color name="ui_text_secondary">#FF8E8E93</color>
+    <color name="ui_divider">#FF2A2A2E</color>
+    <color name="ui_day_off">#FF2A2A2E</color>
+    <color name="ui_saturday">#FF5C9BFF</color>
+    <color name="ui_sunday">#FFFF6B6F</color>
+    <color name="ui_error">#FFFF6B6F</color>
 </resources>

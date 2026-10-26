@@ -1,6 +1,7 @@
 package it.luca.sveglia.ui;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -10,7 +11,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,8 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.color.MaterialColors;
 
 import java.util.Locale;
-
-import it.luca.sveglia.R;
 
 /**
  * Rotella per scegliere un numero (ore o minuti), come nell'Orologio Samsung:
@@ -135,7 +133,8 @@ public class WheelPicker extends RecyclerView {
             text.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, rowHeight));
             text.setGravity(Gravity.CENTER);
             text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 60);
-            text.setTypeface(ResourcesCompat.getFont(parent.getContext(), R.font.outfit));
+            // Numeri sottili come nell'Orologio Samsung (font di sistema)
+            text.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
             text.setIncludeFontPadding(false);
             text.setTextColor(MaterialColors.getColor(parent, com.google.android.material.R.attr.colorOnSurface));
             return new ViewHolder(text) {

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Squillo in stile Samsung: nero, orario grande e sottile, bottone rotondo in basso -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -6,15 +7,23 @@
     android:fitsSystemWindows="true"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingHorizontal="28dp"
-    android:paddingTop="48dp"
-    android:paddingBottom="32dp">
+    android:paddingTop="72dp"
+    android:paddingBottom="56dp">
 
     <TextView
         android:id="@+id/ringing_greeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="#CCFFFFFF" />
+
+    <TextView
+        android:id="@+id/ringing_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.Wakey.Hero"
         android:textColor="@android:color/white" />
 
     <TextView
@@ -22,51 +31,43 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:alpha="0.75"
         android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="@android:color/white" />
+        android:textColor="#99FFFFFF" />
 
-    <TextView
-        android:id="@+id/ringing_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:includeFontPadding="false"
-        android:textAppearance="@style/TextAppearance.Wakey.Hero"
-        android:textColor="@android:color/white"
-        android:textSize="104sp" />
-
-    <!-- Sole che "respira" mentre la sveglia suona -->
-    <FrameLayout
+    <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1" />
+
+    <FrameLayout
+        android:layout_width="180dp"
+        android:layout_height="180dp">
 
         <View
-            android:id="@+id/ringing_glow"
-            android:layout_width="280dp"
-            android:layout_height="280dp"
-            android:layout_gravity="center"
-            android:background="@drawable/bg_sun_glow" />
+            android:id="@+id/ringing_pulse"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_dismiss_pulse" />
 
-        <ImageView
-            android:id="@+id/ringing_sun"
-            android:layout_width="200dp"
-            android:layout_height="120dp"
+        <ImageButton
+            android:id="@+id/button_dismiss"
+            android:layout_width="104dp"
+            android:layout_height="104dp"
             android:layout_gravity="center"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_sunrise" />
+            android:background="@drawable/bg_dismiss_button"
+            android:contentDescription="@string/dismiss"
+            android:scaleType="center"
+            android:src="@drawable/ic_close"
+            app:tint="@android:color/white" />
 
     </FrameLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_dismiss"
-        android:layout_width="match_parent"
-        android:layout_height="76dp"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:text="@string/dismiss"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textColor="@color/dawn_night"
-        app:backgroundTint="@android:color/white"
-        app:cornerRadius="38dp" />
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@android:color/white" />
 
 </LinearLayout>

@@ -11,7 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.PopupMenu;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,38 +21,44 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.MaterialToolbar;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.data.AlarmRepository;
 import it.luca.sveglia.util.RelativeTime;
-import it.luca.sveglia.util.TimeFormat;
 
 /**
- * Schermata principale: in alto la prossima sveglia su sfondo alba, sotto la lista
- * delle sveglie con interruttore, aggiunta e modifica.
+ * Schermata principale in stile One UI: in alto un'intestazione grande con
+ * "Sveglia tra 9 ore e 12 minuti" che si comprime scorrendo, sotto il gruppo delle sveglie.
  */
 public class MainActivity extends AppCompatActivity {
 
     private static final long REFRESH_MS = 30_000;
+    // Quota di schermo occupata dall'intestazione aperta, come nelle app Samsung
+    private static final float HEADER_SCREEN_RATIO = 0.36f;
+    private static final DateTimeFormatter HEADER_DATE =
+            DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", Locale.ITALIAN);
 
     private View permissionCard;
     private TextView permissionText;
     private View permissionButton;
-    private TextView greeting;
-    private TextView heroOverline;
-    private TextView heroTime;
-    private TextView heroSubtitle;
+    private TextView headerTitle;
+    private TextView headerSubtitle;
     private List<AlarmEntity> alarms = Collections.emptyList();
 
-    // Aggiorna "tra X h Y min" e il saluto mentre la schermata è aperta
+    // Aggiorna "tra X ore e Y minuti" mentre la schermata è aperta
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refresh = new Runnable() {
         @Override
@@ -70,28 +76,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        greeting = findViewById(R.id.greeting);
-        heroOverline = findViewById(R.id.hero_overline);
-        heroTime = findViewById(R.id.hero_time);
-        heroSubtitle = findViewById(R.id.hero_subtitle);
-        findViewById(R.id.button_menu).setOnClickListener(this::showMenu);
+        setupHeader();
 
-        RecyclerView listView = findViewById(R.id.alarm_list);
+        RecyclerView list = findViewById(R.id.alarm_list);
+        View group = findViewById(R.id.alarm_group);
         TextView empty = findViewById(R.id.empty_text);
         AlarmAdapter adapter = new AlarmAdapter(
                 alarm -> startActivity(AlarmEditActivity.intent(this, alarm.id)),
                 (alarm, enabled) -> AlarmRepository.setEnabled(this, alarm, enabled));
-        listView.setLayoutManager(new LinearLayoutManager(this));
-        listView.setAdapter(adapter);
-        AlarmRepository.observeAll(this).observe(this, list -> {
-            alarms = list;
-            adapter.submitList(list);
-            empty.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+        list.setLayoutManager(new LinearLayoutManager(this));
+        list.setAdapter(adapter);
+        list.addItemDecoration(new GroupDividers(this));
+        AlarmRepository.observeAll(this).observe(this, items -> {
+            alarms = items;
+            adapter.submitList(items);
+            group.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
+            empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
             updateHeader();
         });
-
-        findViewById(R.id.fab_add).setOnClickListener(
-                v -> startActivity(AlarmEditActivity.intent(this, 0)));
 
         permissionCard = findViewById(R.id.permission_card);
         permissionText = findViewById(R.id.permission_text);
@@ -102,6 +104,42 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
+    }
+
+    /**
+     * Intestazione alta circa un terzo dello schermo; mentre si comprime il testo grande
+     * sfuma e compare il titolo piccolo nella barra, come in One UI.
+     */
+    private void setupHeader() {
+        headerTitle = findViewById(R.id.header_title);
+        headerSubtitle = findViewById(R.id.header_subtitle);
+        View header = findViewById(R.id.header);
+        ViewGroup.LayoutParams params = header.getLayoutParams();
+        params.height = Math.round(getResources().getDisplayMetrics().heightPixels * HEADER_SCREEN_RATIO);
+        header.setLayoutParams(params);
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_add) {
+                startActivity(AlarmEditActivity.intent(this, 0));
+            } else if (id == R.id.action_test_alarm) {
+                addTestAlarm();
+            } else if (id == R.id.action_settings) {
+                startActivity(new Intent(this, SettingsActivity.class));
+            } else {
+                return false;
+            }
+            return true;
+        });
+
+        AppBarLayout appBar = findViewById(R.id.appbar);
+        appBar.addOnOffsetChangedListener((bar, offset) -> {
+            float collapsed = -offset / (float) bar.getTotalScrollRange();
+            header.setAlpha(1f - Math.min(1f, collapsed * 1.6f));
+            // Titolo piccolo visibile solo a intestazione quasi chiusa
+            toolbar.setTitle(collapsed > 0.8f ? getString(R.string.alarms_title) : "");
+        });
     }
 
     @Override
@@ -120,29 +158,9 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private void showMenu(View anchor) {
-        PopupMenu menu = new PopupMenu(this, anchor);
-        menu.inflate(R.menu.main);
-        menu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_test_alarm) {
-                addTestAlarm();
-                return true;
-            } else if (item.getItemId() == R.id.action_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
-        });
-        menu.show();
-    }
-
-    /** Saluto e riquadro con la prossima sveglia attiva (la più vicina nel tempo). */
+    /** "Sveglia tra 9 ore e 12 minuti" + "mar 27 ott, 07:00" per la sveglia attiva più vicina. */
     private void updateHeader() {
         long now = System.currentTimeMillis();
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDateTime nowTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), zone);
-        greeting.setText(RelativeTime.greeting(nowTime.getHour()));
-
         long next = Long.MAX_VALUE;
         for (AlarmEntity alarm : alarms) {
             if (alarm.enabled) {
@@ -150,18 +168,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (next == Long.MAX_VALUE) {
-            heroOverline.setVisibility(View.INVISIBLE);
-            heroTime.setText(R.string.no_active_alarm);
-            heroTime.setTextSize(40);
-            heroSubtitle.setText(R.string.no_active_alarm_hint);
+            headerTitle.setText(R.string.header_none);
+            headerSubtitle.setText(R.string.header_none_hint);
             return;
         }
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime nowTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), zone);
         LocalDateTime when = LocalDateTime.ofInstant(Instant.ofEpochMilli(next), zone);
-        heroOverline.setVisibility(View.VISIBLE);
-        heroTime.setTextSize(72);
-        heroTime.setText(TimeFormat.display(when.getHour(), when.getMinute()));
-        heroSubtitle.setText(getString(R.string.hero_subtitle,
-                RelativeTime.day(nowTime, when), RelativeTime.until(nowTime, when)));
+        headerTitle.setText(getString(R.string.header_next, RelativeTime.durationLong(nowTime, when)));
+        headerSubtitle.setText(when.format(HEADER_DATE));
     }
 
     /** Sveglia singola tra un minuto, comoda per provare suono e briefing. */

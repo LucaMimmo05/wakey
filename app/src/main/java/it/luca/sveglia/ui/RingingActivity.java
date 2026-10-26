@@ -59,8 +59,7 @@ public class RingingActivity extends AppCompatActivity {
         TextView date = findViewById(R.id.ringing_date);
         date.setText(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.ITALIAN)));
 
-        breathe(findViewById(R.id.ringing_glow), 1.18f, 0.55f);
-        breathe(findViewById(R.id.ringing_sun), 1.06f, 1f);
+        breathe(findViewById(R.id.ringing_pulse), 0.62f, 0f);
 
         findViewById(R.id.button_dismiss).setOnClickListener(v -> {
             AlarmService.requestDismiss(this);
@@ -79,15 +78,15 @@ public class RingingActivity extends AppCompatActivity {
                 ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
-    /** Animazione lenta di "respiro": la vista si ingrandisce e torna, all'infinito. */
-    private static void breathe(View view, float scale, float minAlpha) {
+    /** Anello che parte dal bottone, si allarga e sfuma, all'infinito (come le sveglie Samsung). */
+    private static void breathe(View view, float fromScale, float endAlpha) {
         ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(view,
-                PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, scale),
-                PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, scale),
-                PropertyValuesHolder.ofFloat(View.ALPHA, minAlpha, 1f));
+                PropertyValuesHolder.ofFloat(View.SCALE_X, fromScale, 1f),
+                PropertyValuesHolder.ofFloat(View.SCALE_Y, fromScale, 1f),
+                PropertyValuesHolder.ofFloat(View.ALPHA, 1f, endAlpha));
         animator.setDuration(1600);
         animator.setRepeatCount(ValueAnimator.INFINITE);
-        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.setRepeatMode(ValueAnimator.RESTART);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.start();
     }

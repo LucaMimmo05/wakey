@@ -2,12 +2,14 @@ package it.luca.sveglia.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Space;
 import android.widget.TextView;
@@ -15,10 +17,10 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.IntentCompat;
 
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.color.MaterialColors;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -49,7 +51,7 @@ public class AlarmEditActivity extends AppCompatActivity {
     private WheelPicker hourWheel;
     private WheelPicker minuteWheel;
     private TextView ringsIn;
-    private TextInputEditText labelView;
+    private EditText labelView;
     private final TextView[] dayViews = new TextView[7];
     private TextView daysSummary;
     private TextView soundName;
@@ -90,8 +92,7 @@ public class AlarmEditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm_edit);
 
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> finish());
+        findViewById(R.id.button_cancel).setOnClickListener(v -> finish());
 
         hourWheel = findViewById(R.id.wheel_hour);
         minuteWheel = findViewById(R.id.wheel_minute);
@@ -105,21 +106,19 @@ public class AlarmEditActivity extends AppCompatActivity {
         soundName = findViewById(R.id.sound_name);
         buildDayToggles(findViewById(R.id.edit_days));
 
-        findViewById(R.id.button_system_sound).setOnClickListener(v -> pickSystemSound());
-        findViewById(R.id.button_file_sound).setOnClickListener(
+        findViewById(R.id.row_system_sound).setOnClickListener(v -> pickSystemSound());
+        findViewById(R.id.row_file_sound).setOnClickListener(
                 v -> fileSoundPicker.launch(new String[]{"audio/*"}));
         findViewById(R.id.button_save).setOnClickListener(v -> save());
 
         long id = getIntent().getLongExtra(EXTRA_ALARM_ID, 0);
         if (id == 0) {
-            toolbar.setTitle(R.string.new_alarm);
             AlarmEntity fresh = new AlarmEntity();
             Calendar now = Calendar.getInstance();
             fresh.hour = now.get(Calendar.HOUR_OF_DAY);
             fresh.minute = now.get(Calendar.MINUTE);
             show(fresh);
         } else {
-            toolbar.setTitle(R.string.edit_alarm);
             // Room non permette letture sul main thread
             Executors.newSingleThreadExecutor().execute(() -> {
                 AlarmEntity loaded = AppDatabase.get(this).alarmDao().getById(id);
@@ -134,8 +133,16 @@ public class AlarmEditActivity extends AppCompatActivity {
         }
     }
 
-    /** Sette cerchi L M M G V S D distribuiti su tutta la larghezza; un tocco li attiva/disattiva. */
+    /**
+     * Sette cerchi L M M G V S D distribuiti su tutta la larghezza; un tocco li attiva/disattiva.
+     * Come nel calendario Samsung il sabato è blu e la domenica rossa.
+     */
     private void buildDayToggles(LinearLayout row) {
+        int white = ContextCompat.getColor(this, android.R.color.white);
+        int normal = MaterialColors.getColor(row, com.google.android.material.R.attr.colorOnSurface);
+        int[] offColors = {normal, normal, normal, normal, normal,
+                ContextCompat.getColor(this, R.color.ui_saturday),
+                ContextCompat.getColor(this, R.color.ui_sunday)};
         for (int i = 0; i < 7; i++) {
             if (i > 0) {
                 row.addView(new Space(this), new LinearLayout.LayoutParams(0, 1, 1f));
@@ -143,6 +150,9 @@ public class AlarmEditActivity extends AppCompatActivity {
             // Stile applicato come defStyleRes: cerchio, colori e dimensione del testo
             TextView day = new TextView(this, null, 0, R.style.Widget_Wakey_DayToggle);
             day.setText(DAY_LABELS[i]);
+            day.setTextColor(new ColorStateList(
+                    new int[][]{{android.R.attr.state_selected}, {}},
+                    new int[]{white, offColors[i]}));
             day.setOnClickListener(v -> {
                 v.setSelected(!v.isSelected());
                 refreshDaysSummary();

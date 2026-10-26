@@ -1,34 +1,31 @@
 <resources>
     <string name="app_name">Wakey</string>
 
-    <string name="no_alarms">Ancora nessuna sveglia.\nTocca \"Nuova sveglia\" per crearne una.</string>
+    <string name="no_alarms">Ancora nessuna sveglia.\nTocca + in alto per crearne una.</string>
     <string name="new_alarm">Nuova sveglia</string>
-    <string name="menu">Menu</string>
-    <string name="next_alarm">Prossima sveglia</string>
-    <string name="your_alarms">Le tue sveglie</string>
-    <string name="no_active_alarm">Nessuna sveglia</string>
-    <string name="no_active_alarm_hint">Dormi quanto vuoi</string>
-    <string name="hero_subtitle">%1$s · %2$s</string>
+    <string name="alarms_title">Sveglie</string>
+    <string name="header_next">Sveglia tra\n%1$s</string>
+    <string name="header_none">Nessuna sveglia attiva</string>
+    <string name="header_none_hint">Tocca + per aggiungerne una</string>
+    <string name="cancel">Annulla</string>
+    <string name="time_separator" translatable="false">:</string>
+    <string name="once">Una volta</string>
     <string name="test_alarm">Sveglia di prova tra 1 minuto</string>
     <string name="test_alarm_label">Prova</string>
     <string name="settings">Impostazioni</string>
-    <string name="edit_alarm">Modifica sveglia</string>
     <string name="back">Indietro</string>
-    <string name="pick_time_title">Orario della sveglia</string>
-    <string name="label_hint">Etichetta (facoltativa)</string>
+    <string name="label_hint">Nome sveglia</string>
     <string name="repeat_label">Ripeti</string>
     <string name="save">Salva</string>
     <string name="delete">Elimina sveglia</string>
-    <string name="alarm_details">%1$s · %2$s</string>
 
     <string name="sound_label">Suono della sveglia</string>
     <string name="sound_default">Suono sveglia predefinito</string>
     <string name="sound_unavailable">Suono non disponibile (verrà usato quello predefinito)</string>
-    <string name="pick_system_sound">Suono di sistema</string>
-    <string name="pick_file_sound">Scegli file</string>
+    <string name="pick_file_sound_long">Usa un brano dal telefono</string>
 
     <string name="voice_label">Voce del briefing</string>
-    <string name="voice_description">La voce che ti legge ora, meteo e parola del giorno.</string>
+    <string name="voice_description">Voce più umana per il briefing</string>
     <string name="hours">Ore</string>
     <string name="minutes">Minuti</string>
     <string name="rings_in">Suonerà %1$s, %2$s</string>
