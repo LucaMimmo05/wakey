@@ -18,6 +18,5 @@
     <string name="notification_ringing_title">Sveglia</string>
     <string name="notification_ringing_text">Tocca per spegnere</string>
 
-    <string name="briefing_time">Buongiorno, %1$s.</string>
     <string name="tts_italian_missing">Voce italiana non installata: installala nelle impostazioni di sintesi vocale</string>
 </resources>

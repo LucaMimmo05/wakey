@@ -12,7 +12,9 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -20,11 +22,18 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 
+import java.time.LocalDate;
 import java.util.Calendar;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.ui.RingingActivity;
-import it.luca.sveglia.util.TimeFormat;
+import it.luca.sveglia.weather.WeatherReport;
+import it.luca.sveglia.weather.WeatherRepository;
+import it.luca.sveglia.word.WordOfTheDay;
 
 /**
  * Foreground service che fa suonare la sveglia e, dopo "Spegni", legge il briefing.
@@ -42,11 +51,18 @@ public class AlarmService extends Service {
     private static final int NOTIFICATION_ID = 1;
     // Limite di sicurezza per il wake lock: squillo + briefing non durano di più
     private static final long WAKE_LOCK_TIMEOUT_MS = 15 * 60 * 1000L;
+    // Attesa massima del meteo dopo "Spegni" (di solito è già arrivato mentre suonava)
+    private static final long WEATHER_WAIT_SECONDS = 6;
 
     private MediaPlayer player;
     private BriefingSpeaker speaker;
     private PowerManager.WakeLock wakeLock;
     private boolean ringing;
+
+    // Rete e lettura file fuori dal main thread
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private Future<WeatherReport> weatherFuture;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -74,6 +90,8 @@ public class AlarmService extends Service {
 
         // Il motore vocale si prepara mentre la sveglia suona
         speaker = new BriefingSpeaker(this);
+        // Il meteo si scarica mentre suona, così allo "Spegni" è già pronto
+        weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday());
         startSound();
     }
 
@@ -87,9 +105,26 @@ public class AlarmService extends Service {
         sendBroadcast(new Intent(ACTION_RINGING_FINISHED).setPackage(getPackageName()));
 
         Calendar now = Calendar.getInstance();
-        String text = getString(R.string.briefing_time,
-                TimeFormat.spoken(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE)));
-        speaker.speak(text, this::stopEverything);
+        executor.execute(() -> {
+            String text = BriefingText.build(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE),
+                    waitForWeather(), WordOfTheDay.forDate(this, LocalDate.now()));
+            mainHandler.post(() -> {
+                // speaker è null se nel frattempo il servizio è stato chiuso
+                if (speaker != null) {
+                    speaker.speak(text, this::stopEverything);
+                }
+            });
+        });
+    }
+
+    /** Meteo scaricato durante lo squillo, oppure null se non è arrivato in tempo. */
+    private WeatherReport waitForWeather() {
+        try {
+            return weatherFuture.get(WEATHER_WAIT_SECONDS, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Log.w(TAG, "Meteo non arrivato in tempo", e);
+            return null;
+        }
     }
 
     private void startSound() {
@@ -142,6 +177,7 @@ public class AlarmService extends Service {
     @Override
     public void onDestroy() {
         releaseResources();
+        executor.shutdownNow();
         super.onDestroy();
     }
 
