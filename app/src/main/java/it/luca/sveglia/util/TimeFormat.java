@@ -28,4 +28,17 @@ public final class TimeFormat {
         }
         return minute == 0 ? base : base + " e " + minute;
     }
+
+    /** Orario di un impegno: "alle 9 e 30", "all'una", "a mezzanotte". */
+    public static String at(int hour, int minute) {
+        String base;
+        if (hour == 0) {
+            base = "a mezzanotte";
+        } else if (hour == 1) {
+            base = "all'una";
+        } else {
+            base = "alle " + hour;
+        }
+        return minute == 0 ? base : base + " e " + minute;
+    }
 }

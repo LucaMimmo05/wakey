@@ -34,24 +34,29 @@ import java.util.concurrent.TimeUnit;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmPrefs;
+import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.tts.BriefingCache;
 import it.luca.sveglia.ui.RingingActivity;
 import it.luca.sveglia.weather.WeatherReport;
 import it.luca.sveglia.weather.WeatherRepository;
-import it.luca.sveglia.word.WordOfTheDay;
+import it.luca.sveglia.util.TimeFormat;
 
 /**
  * Foreground service che fa suonare la sveglia e legge il briefing mentre suona:
  * pochi secondi dopo l'inizio la musica si abbassa, la voce legge il briefing e poi
  * la musica torna a volume pieno finché l'utente non preme "Spegni", che ferma tutto.
  * La voce è quella naturale preparata prima da BriefingAudioWorker (file MP3), oppure,
- * se il file non c'è, quella di sistema.
+ * se il file non c'è, quella di sistema. "Posticipa" la fa risuonare dopo qualche minuto,
+ * senza ripetere il briefing.
  * Resta in foreground per tutto il tempo, così il sistema non lo uccide a metà.
  */
 public class AlarmService extends Service {
 
     public static final String ACTION_RING = "it.luca.sveglia.action.RING";
     public static final String ACTION_DISMISS = "it.luca.sveglia.action.DISMISS";
+    public static final String ACTION_SNOOZE = "it.luca.sveglia.action.SNOOZE";
+    private static final String ACTION_CANCEL_SNOOZE = "it.luca.sveglia.action.CANCEL_SNOOZE";
+    private static final String EXTRA_SNOOZED = "snoozed";
     private static final String EXTRA_ALARM_ID = "alarm_id";
     private static final String EXTRA_SOUND_URI = "sound_uri";
     private static final String EXTRA_LABEL = "label";
@@ -60,7 +65,9 @@ public class AlarmService extends Service {
 
     private static final String TAG = "AlarmService";
     private static final String CHANNEL_ID = "alarm";
+    private static final String SNOOZE_CHANNEL_ID = "snooze";
     private static final int NOTIFICATION_ID = 1;
+    private static final int SNOOZE_NOTIFICATION_ID = 3;
     // Limite di sicurezza per il wake lock: squillo + briefing non durano di più
     private static final long WAKE_LOCK_TIMEOUT_MS = 15 * 60 * 1000L;
     // Dopo quanto dall'inizio dello squillo parte la voce
@@ -76,6 +83,8 @@ public class AlarmService extends Service {
     private PowerManager.WakeLock wakeLock;
     private boolean ringing;
     private long alarmId;
+    private String label;
+    private String soundUri;
     private AudioFocusRequest focusRequest;
 
     // Rete e lettura file fuori dal main thread
@@ -88,14 +97,18 @@ public class AlarmService extends Service {
         String action = intent != null ? intent.getAction() : null;
         if (ACTION_DISMISS.equals(action)) {
             dismiss();
+        } else if (ACTION_SNOOZE.equals(action)) {
+            snooze();
+        } else if (ACTION_CANCEL_SNOOZE.equals(action)) {
+            cancelSnooze(intent.getLongExtra(EXTRA_ALARM_ID, 0));
         } else if (intent != null) {
             ring(intent.getLongExtra(EXTRA_ALARM_ID, 0), intent.getStringExtra(EXTRA_SOUND_URI),
-                    intent.getStringExtra(EXTRA_LABEL));
+                    intent.getStringExtra(EXTRA_LABEL), intent.getBooleanExtra(EXTRA_SNOOZED, false));
         }
         return START_NOT_STICKY;
     }
 
-    private void ring(long alarmId, String soundUri, String label) {
+    private void ring(long alarmId, String soundUri, String label, boolean snoozed) {
         // startForeground va chiamato subito, altrimenti il sistema chiude il servizio
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildRingingNotification(label),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
@@ -104,16 +117,25 @@ public class AlarmService extends Service {
         }
         ringing = true;
         this.alarmId = alarmId;
+        this.label = label;
+        this.soundUri = soundUri;
+        getSystemService(NotificationManager.class).cancel(SNOOZE_NOTIFICATION_ID);
 
         PowerManager pm = getSystemService(PowerManager.class);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sveglia:alarm");
         wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
 
-        // Il motore vocale si prepara mentre la sveglia inizia a suonare
-        speaker = new BriefingSpeaker(this);
-        weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday());
         requestAudioFocus();
         startSound(soundUri != null ? Uri.parse(soundUri) : null);
+        if (snoozed) {
+            // Dopo un posticipo suona e basta: il briefing è già stato letto
+            return;
+        }
+        // Il motore vocale e il meteo si preparano mentre la sveglia inizia a suonare
+        speaker = new BriefingSpeaker(this, AlarmPrefs.getSpeechRate(this));
+        if (AlarmPrefs.isReadWeather(this)) {
+            weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday());
+        }
         scheduleBriefing(SystemClock.uptimeMillis() + BRIEFING_DELAY_MS);
     }
 
@@ -123,16 +145,17 @@ public class AlarmService extends Service {
      */
     private void scheduleBriefing(long speakAtUptime) {
         executor.execute(() -> {
-            WeatherReport weather = waitForWeather();
-            WordOfTheDay.Word word = WordOfTheDay.forDate(this, LocalDate.now());
+            WeatherReport weather = weatherFuture != null ? waitForWeather() : null;
+            // L'orario detto è quello in cui parte la voce, pochi secondi dopo
+            Calendar at = Calendar.getInstance();
+            at.add(Calendar.MILLISECOND, (int) Math.max(0, speakAtUptime - SystemClock.uptimeMillis()));
+            String text = BriefingComposer.compose(this, at.get(Calendar.HOUR_OF_DAY),
+                    at.get(Calendar.MINUTE), LocalDate.now(), weather);
             mainHandler.postAtTime(() -> {
                 // Se nel frattempo l'utente ha già spento la sveglia non si legge niente
                 if (!ringing || speaker == null) {
                     return;
                 }
-                Calendar now = Calendar.getInstance();
-                String text = BriefingText.build(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE),
-                        weather, word);
                 setVolume(DUCKED_VOLUME);
                 // Finita la voce la sveglia continua a suonare a volume pieno
                 Runnable restoreMusic = () -> setVolume(1f);
@@ -143,6 +166,48 @@ public class AlarmService extends Service {
                 }
             }, speakAtUptime);
         });
+    }
+
+    /** "Posticipa": ferma tutto e riprogramma la stessa sveglia tra qualche minuto. */
+    private void snooze() {
+        if (!ringing) {
+            stopEverything();
+            return;
+        }
+        long at = System.currentTimeMillis() + AlarmPrefs.getSnoozeMinutes(this) * 60_000L;
+        AlarmScheduler.scheduleSnooze(this, alarmId, at);
+        showSnoozedNotification(at);
+        sendBroadcast(new Intent(ACTION_RINGING_FINISHED).setPackage(getPackageName()));
+        stopEverything();
+    }
+
+    private void cancelSnooze(long alarmId) {
+        AlarmScheduler.cancelSnooze(this, alarmId);
+        getSystemService(NotificationManager.class).cancel(SNOOZE_NOTIFICATION_ID);
+        if (!ringing) {
+            stopSelf();
+        }
+    }
+
+    /** "Sveglia posticipata alle 07:05" con il bottone per annullare il posticipo. */
+    private void showSnoozedNotification(long atMillis) {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        nm.createNotificationChannel(new NotificationChannel(SNOOZE_CHANNEL_ID,
+                getString(R.string.channel_snooze), NotificationManager.IMPORTANCE_LOW));
+        Calendar at = Calendar.getInstance();
+        at.setTimeInMillis(atMillis);
+        PendingIntent cancelPi = PendingIntent.getService(this, 3,
+                new Intent(this, AlarmService.class).setAction(ACTION_CANCEL_SNOOZE)
+                        .putExtra(EXTRA_ALARM_ID, alarmId),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        nm.notify(SNOOZE_NOTIFICATION_ID, new NotificationCompat.Builder(this, SNOOZE_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_alarm)
+                .setContentTitle(getString(R.string.snoozed_until,
+                        TimeFormat.display(at.get(Calendar.HOUR_OF_DAY), at.get(Calendar.MINUTE))))
+                .setContentText(label)
+                .setOngoing(true)
+                .addAction(0, getString(R.string.snooze_cancel), cancelPi)
+                .build());
     }
 
     /** "Spegni": ferma musica e voce insieme. */
@@ -212,6 +277,11 @@ public class AlarmService extends Service {
                 return true;
             });
             voicePlayer.prepare();
+            float rate = AlarmPrefs.getSpeechRate(this);
+            if (rate != 1f) {
+                // Stessa velocità scelta per la voce di sistema, senza cambiare il tono
+                voicePlayer.setPlaybackParams(voicePlayer.getPlaybackParams().setSpeed(rate));
+            }
             voicePlayer.start();
             return true;
         } catch (Exception e) {
@@ -296,6 +366,9 @@ public class AlarmService extends Service {
         PendingIntent dismissPi = PendingIntent.getService(this, 1,
                 new Intent(this, AlarmService.class).setAction(ACTION_DISMISS),
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent snoozePi = PendingIntent.getService(this, 2,
+                new Intent(this, AlarmService.class).setAction(ACTION_SNOOZE),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_alarm)
@@ -307,6 +380,7 @@ public class AlarmService extends Service {
                 .setContentIntent(fullScreenPi)
                 // Con schermo bloccato apre direttamente la schermata di squillo
                 .setFullScreenIntent(fullScreenPi, true)
+                .addAction(0, getString(R.string.snooze), snoozePi)
                 .addAction(0, getString(R.string.dismiss), dismissPi)
                 .build();
     }
@@ -320,13 +394,23 @@ public class AlarmService extends Service {
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
     }
 
-    /** Intent per far suonare la sveglia alarmId con il suono indicato (null = predefinito). */
-    public static Intent ringIntent(Context context, long alarmId, String soundUri, String label) {
+    /**
+     * Intent per far suonare la sveglia alarmId con il suono indicato (null = predefinito).
+     * snoozed = true per lo squillo dopo un posticipo, senza briefing.
+     */
+    public static Intent ringIntent(Context context, long alarmId, String soundUri, String label,
+                                    boolean snoozed) {
         return new Intent(context, AlarmService.class)
                 .setAction(ACTION_RING)
                 .putExtra(EXTRA_ALARM_ID, alarmId)
                 .putExtra(EXTRA_SOUND_URI, soundUri)
-                .putExtra(EXTRA_LABEL, label);
+                .putExtra(EXTRA_LABEL, label)
+                .putExtra(EXTRA_SNOOZED, snoozed);
+    }
+
+    /** Posticipa la sveglia che sta suonando (usato dalla schermata di squillo). */
+    public static void requestSnooze(Context context) {
+        context.startService(new Intent(context, AlarmService.class).setAction(ACTION_SNOOZE));
     }
 
     /** Avvia lo spegnimento della sveglia (usato dalla schermata di squillo). */

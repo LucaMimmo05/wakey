@@ -7,12 +7,17 @@ import android.net.Uri;
 
 import it.luca.sveglia.tts.Voices;
 
-/** Impostazioni generali: suono predefinito e voce del briefing (il suono di ogni sveglia sta nel database). */
+/** Impostazioni generali: voce e contenuto del briefing, posticipo (il suono di ogni sveglia sta nel database). */
 public final class AlarmPrefs {
 
     private static final String PREFS = "settings";
     private static final String KEY_NATURAL_VOICE = "natural_voice";
     private static final String KEY_VOICE = "voice";
+    private static final String KEY_READ_WEATHER = "read_weather";
+    private static final String KEY_READ_WORD = "read_word";
+    private static final String KEY_READ_CALENDAR = "read_calendar";
+    private static final String KEY_SPEECH_RATE = "speech_rate";
+    private static final String KEY_SNOOZE_MINUTES = "snooze_minutes";
 
     private AlarmPrefs() {
     }
@@ -39,6 +44,48 @@ public final class AlarmPrefs {
 
     public static void setVoice(Context context, String voiceName) {
         prefs(context).edit().putString(KEY_VOICE, voiceName).apply();
+    }
+
+    public static boolean isReadWeather(Context context) {
+        return prefs(context).getBoolean(KEY_READ_WEATHER, true);
+    }
+
+    public static void setReadWeather(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_READ_WEATHER, enabled).apply();
+    }
+
+    public static boolean isReadWord(Context context) {
+        return prefs(context).getBoolean(KEY_READ_WORD, true);
+    }
+
+    public static void setReadWord(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_READ_WORD, enabled).apply();
+    }
+
+    /** Spento di default: serve il permesso di lettura del calendario. */
+    public static boolean isReadCalendar(Context context) {
+        return prefs(context).getBoolean(KEY_READ_CALENDAR, false);
+    }
+
+    public static void setReadCalendar(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_READ_CALENDAR, enabled).apply();
+    }
+
+    /** Velocità della voce: 1 = normale, 0.8 = più lenta, 1.2 = più veloce. */
+    public static float getSpeechRate(Context context) {
+        return prefs(context).getFloat(KEY_SPEECH_RATE, 1f);
+    }
+
+    public static void setSpeechRate(Context context, float rate) {
+        prefs(context).edit().putFloat(KEY_SPEECH_RATE, rate).apply();
+    }
+
+    public static int getSnoozeMinutes(Context context) {
+        return prefs(context).getInt(KEY_SNOOZE_MINUTES, 5);
+    }
+
+    public static void setSnoozeMinutes(Context context, int minutes) {
+        prefs(context).edit().putInt(KEY_SNOOZE_MINUTES, minutes).apply();
     }
 
     private static SharedPreferences prefs(Context context) {

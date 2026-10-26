@@ -26,19 +26,24 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         long alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, 0);
+        boolean snoozed = intent.getBooleanExtra(AlarmScheduler.EXTRA_SNOOZED, false);
         Context app = context.getApplicationContext();
         // goAsync: la lettura dal database non può stare sul main thread
         PendingResult pending = goAsync();
         executor.execute(() -> {
             try {
                 AlarmEntity alarm = AppDatabase.get(app).alarmDao().getById(alarmId);
-                // Sveglia cancellata o spenta nel frattempo: non deve suonare
-                if (alarm == null || !alarm.enabled) {
+                // Sveglia cancellata, o spenta nel frattempo: non deve suonare.
+                // Dopo un posticipo invece suona anche se era singola (ormai disattivata)
+                if (alarm == null || (!alarm.enabled && !snoozed)) {
                     return;
                 }
                 ContextCompat.startForegroundService(app,
-                        AlarmService.ringIntent(app, alarm.id, alarm.soundUri, alarm.label));
-                AlarmRepository.afterRingNow(app, alarm);
+                        AlarmService.ringIntent(app, alarm.id, alarm.soundUri, alarm.label, snoozed));
+                if (!snoozed) {
+                    // La prossima occorrenza è già stata programmata al primo squillo
+                    AlarmRepository.afterRingNow(app, alarm);
+                }
             } finally {
                 pending.finish();
             }

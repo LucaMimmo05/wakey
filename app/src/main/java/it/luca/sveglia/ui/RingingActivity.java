@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import it.luca.sveglia.R;
+import it.luca.sveglia.alarm.AlarmPrefs;
 import it.luca.sveglia.service.AlarmService;
 import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.TimeFormat;
@@ -80,6 +81,16 @@ public class RingingActivity extends AppCompatActivity {
                 TimeFormat.display(now.getHour(), now.getMinute()));
         ((TextView) findViewById(R.id.ringing_date)).setText(
                 now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.ITALIAN)));
+
+        TextView snooze = findViewById(R.id.button_snooze);
+        snooze.setText(getString(R.string.snooze_minutes, AlarmPrefs.getSnoozeMinutes(this)));
+        snooze.setOnClickListener(v -> {
+            if (!dismissed) {
+                dismissed = true;
+                AlarmService.requestSnooze(this);
+                finish();
+            }
+        });
 
         handle = findViewById(R.id.dismiss_handle);
         fill = findViewById(R.id.dismiss_fill);

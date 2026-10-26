@@ -42,6 +42,20 @@
 
     </LinearLayout>
 
+    <!-- Posticipa: un tocco basta, non è un'azione definitiva -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_snooze"
+        style="?attr/materialButtonTonalStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="356dp"
+        android:paddingHorizontal="28dp"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@android:color/white"
+        app:backgroundTint="#FF2F2F33"
+        app:cornerRadius="28dp" />
+
     <FrameLayout
         android:layout_width="280dp"
         android:layout_height="280dp"

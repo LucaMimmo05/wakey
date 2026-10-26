@@ -52,7 +52,7 @@
     <style name="Widget.Wakey.DayToggle" parent="">
         <item name="android:gravity">center</item>
         <item name="android:background">@drawable/bg_day_toggle</item>
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">15sp</item>
         <item name="android:textStyle">bold</item>
     </style>
 

@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Solo se l'utente attiva "Calendario" nelle impostazioni -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
     <!-- Ammesso per le app sveglia: chiede di escludere Wakey dall'ottimizzazione batteria -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 

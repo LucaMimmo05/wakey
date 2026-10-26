@@ -27,14 +27,17 @@ public class BriefingSpeaker {
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final TextToSpeech tts;
+    private final float speechRate;
 
     private boolean ready;
     private boolean failed;
     private String pendingText;
     private Runnable onDone;
 
-    public BriefingSpeaker(Context context) {
+    /** @param speechRate 1 = velocità normale, meno di 1 più lenta */
+    public BriefingSpeaker(Context context, float speechRate) {
         this.context = context.getApplicationContext();
+        this.speechRate = speechRate;
         tts = new TextToSpeech(this.context, this::onInit);
     }
 
@@ -55,6 +58,7 @@ public class BriefingSpeaker {
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build());
+        tts.setSpeechRate(speechRate);
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onStart(String utteranceId) {

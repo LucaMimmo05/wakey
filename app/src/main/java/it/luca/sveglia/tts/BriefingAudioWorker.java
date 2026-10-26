@@ -28,9 +28,9 @@ import java.time.ZoneId;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmPrefs;
-import it.luca.sveglia.service.BriefingText;
+import it.luca.sveglia.service.BriefingComposer;
+import it.luca.sveglia.weather.WeatherReport;
 import it.luca.sveglia.weather.WeatherRepository;
-import it.luca.sveglia.word.WordOfTheDay;
 
 /**
  * Prepara l'audio del briefing con la voce naturale prima che la sveglia suoni:
@@ -84,9 +84,9 @@ public class BriefingAudioWorker extends Worker {
         LocalDateTime when = LocalDateTime.ofInstant(Instant.ofEpochMilli(alarmAt), ZoneId.systemDefault());
 
         // Il testo dice l'orario della sveglia, non quello di adesso (10 minuti prima)
-        String text = BriefingText.build(when.getHour(), when.getMinute(),
-                new WeatherRepository().fetchToday(),
-                WordOfTheDay.forDate(context, when.toLocalDate()));
+        WeatherReport weather = AlarmPrefs.isReadWeather(context) ? new WeatherRepository().fetchToday() : null;
+        String text = BriefingComposer.compose(context, when.getHour(), when.getMinute(),
+                when.toLocalDate(), weather);
 
         File out = BriefingCache.file(context, alarmId);
         if (new CloudTtsClient(context).synthesizeToFile(text, AlarmPrefs.getVoice(context), out)) {

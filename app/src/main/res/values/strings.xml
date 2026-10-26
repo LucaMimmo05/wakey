@@ -45,6 +45,17 @@
     <string name="rings_in">Suonerà %1$s, %2$s</string>
     <string name="natural_voice">Voce naturale (Google Cloud)</string>
     <string name="voice_hint">Voce</string>
+    <string name="briefing_contents">Cosa legge il briefing</string>
+    <string name="read_weather">Meteo</string>
+    <string name="read_weather_text">Cielo, temperature e pioggia di oggi</string>
+    <string name="read_word">Parola del giorno</string>
+    <string name="read_word_text">Una parola italiana e il suo significato</string>
+    <string name="read_calendar">Calendario</string>
+    <string name="read_calendar_text">Gli impegni di oggi</string>
+    <string name="calendar_denied">Senza il permesso del calendario gli impegni non possono essere letti</string>
+    <string name="speech_rate">Velocità della voce</string>
+    <string name="snooze_duration">Durata del posticipo</string>
+    <string name="snooze_option">%1$d minuti</string>
     <string name="voice_key_missing">Chiave API di Google Cloud non impostata: verrà usata la voce di sistema.</string>
 
     <string name="permission_exact_alarm">Per suonare all\'orario esatto Wakey ha bisogno del permesso \"Sveglie e promemoria\". Senza, le sveglie non suonano.</string>
@@ -66,6 +77,11 @@
     <string name="setup_samsung_text">Batteria → Senza limitazioni. Se Wakey è tra le \"App in sospensione\", toglila.</string>
 
     <string name="dismiss">Spegni</string>
+    <string name="snooze">Posticipa</string>
+    <string name="snooze_minutes">Posticipa · %1$d min</string>
+    <string name="snoozed_until">Sveglia posticipata alle %1$s</string>
+    <string name="snooze_cancel">Annulla posticipo</string>
+    <string name="channel_snooze">Sveglie posticipate</string>
     <string name="dismiss_hint">Trascina la X fuori dal cerchio per spegnere la sveglia</string>
     <string name="channel_alarm">Sveglia</string>
     <string name="channel_prefetch">Preparazione briefing</string>

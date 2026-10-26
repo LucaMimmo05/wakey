@@ -25,6 +25,9 @@ public final class AlarmScheduler {
 
     static final String EXTRA_ALARM_ID = "alarm_id";
     static final String EXTRA_ALARM_AT = "alarm_at";
+    static final String EXTRA_SNOOZED = "snoozed";
+    // I posticipi usano requestCode separati da quelli delle sveglie
+    private static final int SNOOZE_REQUEST_BASE = 1_000_000;
     private static final long PREFETCH_BEFORE_MS = 10 * 60 * 1000L;
 
     private AlarmScheduler() {
@@ -64,9 +67,26 @@ public final class AlarmScheduler {
         schedulePrefetch(context, alarm.id, triggerAt);
     }
 
+    /** Fa risuonare la sveglia alarmId all'orario indicato (dopo "Posticipa"). */
+    public static void scheduleSnooze(Context context, long alarmId, long atMillis) {
+        if (!canScheduleExact(context)) {
+            return;
+        }
+        PendingIntent show = PendingIntent.getActivity(context, 0,
+                new Intent(context, MainActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        context.getSystemService(AlarmManager.class).setAlarmClock(
+                new AlarmManager.AlarmClockInfo(atMillis, show), snoozeIntent(context, alarmId));
+    }
+
+    public static void cancelSnooze(Context context, long alarmId) {
+        context.getSystemService(AlarmManager.class).cancel(snoozeIntent(context, alarmId));
+    }
+
     public static void cancel(Context context, long alarmId) {
         AlarmManager am = context.getSystemService(AlarmManager.class);
         am.cancel(alarmIntent(context, alarmId));
+        am.cancel(snoozeIntent(context, alarmId));
         am.cancel(prefetchIntent(context, alarmId, 0));
         BriefingAudioWorker.cancel(context, alarmId);
         BriefingCache.clear(context, alarmId);
@@ -103,6 +123,14 @@ public final class AlarmScheduler {
         Intent intent = new Intent(context, AlarmReceiver.class)
                 .putExtra(EXTRA_ALARM_ID, alarmId);
         return PendingIntent.getBroadcast(context, (int) alarmId, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static PendingIntent snoozeIntent(Context context, long alarmId) {
+        Intent intent = new Intent(context, AlarmReceiver.class)
+                .putExtra(EXTRA_ALARM_ID, alarmId)
+                .putExtra(EXTRA_SNOOZED, true);
+        return PendingIntent.getBroadcast(context, SNOOZE_REQUEST_BASE + (int) alarmId, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
