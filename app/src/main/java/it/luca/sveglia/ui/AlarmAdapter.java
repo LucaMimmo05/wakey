@@ -21,11 +21,16 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 import it.luca.sveglia.R;
+import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.util.Days;
+import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.TimeFormat;
 
 /** Righe del gruppo sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore. */
@@ -66,15 +71,24 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         holder.label.setVisibility(TextUtils.isEmpty(alarm.label) ? View.GONE : View.VISIBLE);
         holder.days.setTextColor(MaterialColors.getColor(holder.days,
                 com.google.android.material.R.attr.colorOnSurfaceVariant));
-        holder.days.setText(alarm.isRepeating() ? dayLetters(context, alarm.days)
-                : context.getString(R.string.once));
-        // Le sveglie spente restano visibili ma sbiadite
-        holder.content.setAlpha(alarm.enabled ? 1f : 0.4f);
+        holder.days.setText(alarm.isRepeating() ? dayLetters(context, alarm.days) : onceText(context, alarm));
+        // Le sveglie spente restano leggibili ma più tenui
+        holder.content.setAlpha(alarm.enabled ? 1f : 0.55f);
         holder.itemView.setOnClickListener(v -> onClick.onClick(alarm));
         // Il listener va tolto prima di setChecked, altrimenti il riciclo delle righe lo farebbe scattare
         holder.enabled.setOnCheckedChangeListener(null);
         holder.enabled.setChecked(alarm.enabled);
         holder.enabled.setOnCheckedChangeListener((button, checked) -> onToggle.onToggle(alarm, checked));
+    }
+
+    /** Sveglia singola: "Una volta · domani", "Una volta · oggi" o "Una volta · mercoledì". */
+    private static String onceText(Context context, AlarmEntity alarm) {
+        ZoneId zone = ZoneId.systemDefault();
+        long now = System.currentTimeMillis();
+        LocalDateTime nowTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), zone);
+        LocalDateTime when = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(AlarmScheduler.nextTrigger(alarm, now)), zone);
+        return context.getString(R.string.once_on, RelativeTime.day(nowTime, when));
     }
 
     /** "L M M G V S D" con i giorni attivi in blu e gli altri appena visibili. */
@@ -93,7 +107,8 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
             if (i < 6) {
-                text.append(' ');
+                // Due spazi invece di letterSpacing, che allargherebbe anche altri testi
+                text.append("  ");
             }
         }
         return text;

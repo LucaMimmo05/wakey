@@ -9,7 +9,7 @@
     <string name="header_none_hint">Tocca + per aggiungerne una</string>
     <string name="cancel">Annulla</string>
     <string name="time_separator" translatable="false">:</string>
-    <string name="once">Una volta</string>
+    <string name="once_on">Una volta · %1$s</string>
     <string name="test_alarm">Sveglia di prova tra 1 minuto</string>
     <string name="test_alarm_label">Prova</string>
     <string name="settings">Impostazioni</string>
