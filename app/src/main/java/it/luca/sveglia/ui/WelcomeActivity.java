@@ -8,11 +8,13 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ScrollView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmPrefs;
+import it.luca.sveglia.util.KeyboardInsets;
 
 /**
  * Primo avvio: chiede il nome, così il briefing inizia con "Buongiorno Maria".
@@ -31,8 +33,16 @@ public class WelcomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
+        KeyboardInsets.apply(findViewById(R.id.welcome_root));
 
         nameView = findViewById(R.id.welcome_name);
+        // Quando si apre la tastiera si scorre in fondo, dove sta il campo
+        ScrollView scroll = findViewById(R.id.welcome_scroll);
+        scroll.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            if (nameView.hasFocus() && b < ob) {
+                scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+            }
+        });
         continueButton = findViewById(R.id.welcome_continue);
         continueButton.setEnabled(false);
         nameView.addTextChangedListener(new TextWatcher() {

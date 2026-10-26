@@ -1,24 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Benvenuto al primo avvio: chiede il nome per il saluto del briefing (stile One UI) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/welcome_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
-    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <LinearLayout
+    <!-- Scorrevole: con la tastiera aperta lo spazio si riduce -->
+    <ScrollView
+        android:id="@+id/welcome_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="12dp">
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="24dp">
 
         <ImageView
             android:layout_width="96dp"
             android:layout_height="96dp"
-            android:layout_marginTop="72dp"
+            android:layout_marginTop="56dp"
             android:importantForAccessibility="no"
             android:src="@mipmap/ic_launcher" />
 
@@ -62,6 +70,7 @@
 
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
+    </ScrollView>
 
     <!-- Salta | Continua, come nelle app Samsung -->
     <LinearLayout

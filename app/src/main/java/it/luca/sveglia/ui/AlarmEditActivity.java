@@ -35,6 +35,7 @@ import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.data.AlarmRepository;
 import it.luca.sveglia.data.AppDatabase;
 import it.luca.sveglia.util.Days;
+import it.luca.sveglia.util.KeyboardInsets;
 import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.SoundNames;
 
@@ -91,6 +92,7 @@ public class AlarmEditActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alarm_edit);
+        KeyboardInsets.apply(findViewById(R.id.edit_root));
 
         findViewById(R.id.button_cancel).setOnClickListener(v -> finish());
 
