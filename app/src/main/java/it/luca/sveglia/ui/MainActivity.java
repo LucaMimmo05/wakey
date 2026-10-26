@@ -4,9 +4,14 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.widget.TextView;
 
@@ -14,6 +19,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.IntentCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -22,15 +28,45 @@ import com.google.android.material.timepicker.TimeFormat;
 import java.util.Calendar;
 
 import it.luca.sveglia.R;
+import it.luca.sveglia.alarm.AlarmPrefs;
 import it.luca.sveglia.alarm.AlarmScheduler;
 
 /** Schermata principale: imposta o annulla l'unica sveglia (Tappa 1). */
 public class MainActivity extends AppCompatActivity {
 
     private TextView statusText;
+    private TextView soundName;
 
     private final ActivityResultLauncher<String> notificationPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> { });
+
+    // Selettore dei suoni di sistema (suonerie, sveglie)
+    private final ActivityResultLauncher<Intent> systemSoundPicker =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                    return;
+                }
+                Uri picked = IntentCompat.getParcelableExtra(result.getData(),
+                        RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri.class);
+                // "Predefinito" o nessuna scelta: si torna al suono sveglia del telefono
+                if (picked == null || Settings.System.DEFAULT_ALARM_ALERT_URI.equals(picked)) {
+                    picked = null;
+                }
+                AlarmPrefs.setSoundUri(this, picked);
+                refreshSound();
+            });
+
+    // Selettore di file audio (brani nella memoria del telefono, Drive, ecc.)
+    private final ActivityResultLauncher<String[]> fileSoundPicker =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri == null) {
+                    return;
+                }
+                // Senza permesso persistente il file non sarebbe più leggibile dopo un riavvio
+                getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                AlarmPrefs.setSoundUri(this, uri);
+                refreshSound();
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +81,11 @@ public class MainActivity extends AppCompatActivity {
             refreshStatus();
         });
 
+        soundName = findViewById(R.id.sound_name);
+        findViewById(R.id.button_system_sound).setOnClickListener(v -> pickSystemSound());
+        findViewById(R.id.button_file_sound).setOnClickListener(
+                v -> fileSoundPicker.launch(new String[]{"audio/*"}));
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -56,6 +97,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshStatus();
+        refreshSound();
+    }
+
+    private void pickSystemSound() {
+        Uri current = AlarmPrefs.getSoundUri(this);
+        Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                        current != null ? current : Settings.System.DEFAULT_ALARM_ALERT_URI);
+        systemSoundPicker.launch(intent);
+    }
+
+    private void refreshSound() {
+        Uri uri = AlarmPrefs.getSoundUri(this);
+        soundName.setText(uri == null ? getString(R.string.sound_default) : soundTitle(uri));
+    }
+
+    /** Nome leggibile del suono: nome del file per i documenti, titolo per i suoni di sistema. */
+    private String soundTitle(Uri uri) {
+        try {
+            if (DocumentsContract.isDocumentUri(this, uri)) {
+                try (Cursor c = getContentResolver().query(uri,
+                        new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+                    if (c != null && c.moveToFirst()) {
+                        return c.getString(0);
+                    }
+                }
+            } else {
+                Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
+                if (ringtone != null) {
+                    return ringtone.getTitle(this);
+                }
+            }
+        } catch (Exception e) {
+            // File cancellato o permesso perso: alla sveglia si userà il suono predefinito
+        }
+        return getString(R.string.sound_unavailable);
     }
 
     private void scheduleInOneMinute() {

@@ -8,6 +8,12 @@
     <string name="pick_time_title">Orario della sveglia</string>
     <string name="cancel_alarm">Annulla sveglia</string>
 
+    <string name="sound_label">Suono della sveglia</string>
+    <string name="sound_default">Suono sveglia predefinito</string>
+    <string name="sound_unavailable">Suono non disponibile (verrà usato quello predefinito)</string>
+    <string name="pick_system_sound">Suono di sistema</string>
+    <string name="pick_file_sound">Scegli file</string>
+
     <string name="permission_title">Permesso necessario</string>
     <string name="permission_exact_alarm">Per suonare all\'orario esatto la sveglia ha bisogno del permesso \"Sveglie e promemoria\". Attivalo nella pagina che si aprirà.</string>
     <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\". Attivalo nella pagina che si aprirà.</string>
