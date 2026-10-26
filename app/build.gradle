@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// La chiave di Google Cloud TTS sta in local.properties (escluso da git), mai nel codice
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def cloudTtsKey = localProps.getProperty('CLOUD_TTS_API_KEY', '')
+
 android {
     namespace = 'it.luca.sveglia'
     compileSdk {
@@ -16,6 +24,12 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = '0.1'
+
+        buildConfigField 'String', 'CLOUD_TTS_API_KEY', "\"${cloudTtsKey}\""
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -35,6 +49,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
     implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
+    implementation 'androidx.work:work-runtime:2.12.0'
 
     testImplementation 'junit:junit:4.13.2'
 }

@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmPrefs;
+import it.luca.sveglia.tts.BriefingCache;
 import it.luca.sveglia.ui.RingingActivity;
 import it.luca.sveglia.weather.WeatherReport;
 import it.luca.sveglia.weather.WeatherRepository;
@@ -42,6 +44,8 @@ import it.luca.sveglia.word.WordOfTheDay;
  * Foreground service che fa suonare la sveglia e legge il briefing mentre suona:
  * pochi secondi dopo l'inizio la musica si abbassa, la voce legge il briefing e poi
  * la musica torna a volume pieno finché l'utente non preme "Spegni", che ferma tutto.
+ * La voce è quella naturale preparata prima da BriefingAudioWorker (file MP3), oppure,
+ * se il file non c'è, quella di sistema.
  * Resta in foreground per tutto il tempo, così il sistema non lo uccide a metà.
  */
 public class AlarmService extends Service {
@@ -64,6 +68,7 @@ public class AlarmService extends Service {
     private static final float DUCKED_VOLUME = 0.15f;
 
     private MediaPlayer player;
+    private MediaPlayer voicePlayer;
     private BriefingSpeaker speaker;
     private PowerManager.WakeLock wakeLock;
     private boolean ringing;
@@ -124,7 +129,12 @@ public class AlarmService extends Service {
                         weather, word);
                 setVolume(DUCKED_VOLUME);
                 // Finita la voce la sveglia continua a suonare a volume pieno
-                speaker.speak(text, () -> setVolume(1f));
+                Runnable restoreMusic = () -> setVolume(1f);
+                File natural = AlarmPrefs.isNaturalVoice(this)
+                        ? BriefingCache.validFile(this, System.currentTimeMillis()) : null;
+                if (natural == null || !playVoiceFile(natural, restoreMusic)) {
+                    speaker.speak(text, restoreMusic);
+                }
             }, speakAtUptime);
         });
     }
@@ -178,6 +188,41 @@ public class AlarmService extends Service {
         }
     }
 
+    /** Riproduce il briefing con voce naturale; false se il file non si riesce ad aprire. */
+    private boolean playVoiceFile(File file, Runnable onDone) {
+        try {
+            voicePlayer = new MediaPlayer();
+            voicePlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build());
+            voicePlayer.setDataSource(file.getPath());
+            voicePlayer.setOnCompletionListener(mp -> {
+                stopVoice();
+                onDone.run();
+            });
+            voicePlayer.setOnErrorListener((mp, what, extra) -> {
+                stopVoice();
+                onDone.run();
+                return true;
+            });
+            voicePlayer.prepare();
+            voicePlayer.start();
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "Briefing con voce naturale non riproducibile, uso la voce di sistema", e);
+            stopVoice();
+            return false;
+        }
+    }
+
+    private void stopVoice() {
+        if (voicePlayer != null) {
+            voicePlayer.release();
+            voicePlayer = null;
+        }
+    }
+
     private void setVolume(float volume) {
         if (player != null) {
             player.setVolume(volume, volume);
@@ -215,6 +260,7 @@ public class AlarmService extends Service {
     private void releaseResources() {
         ringing = false;
         stopSound();
+        stopVoice();
         if (speaker != null) {
             speaker.shutdown();
             speaker = null;

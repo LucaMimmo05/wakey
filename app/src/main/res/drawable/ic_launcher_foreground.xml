@@ -1,13 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sole che sorge con due onde sonore: la sveglia che parla -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group
-        android:translateX="30"
-        android:translateY="30">
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M44,11.44l-9.2,-7.72 -2.58,3.06 9.2,7.72L44,11.44zM15.76,6.78L13.2,3.72 4,11.42l2.58,3.06 9.18,-7.7zM25,16L22,16v12l9.5,5.7 1.5,-2.46 -8,-4.74L25,16zM24,8c-9.94,0 -18,8.06 -18,18s8.04,18 18,18c9.94,0 18,-8.06 18,-18s-8.06,-18 -18,-18zM24,40c-7.74,0 -14,-6.26 -14,-14s6.26,-14 14,-14 14,6.26 14,14 -6.26,14 -14,14z" />
-    </group>
+    <!-- onde sonore / raggi -->
+    <path
+        android:pathData="M28,49 A30,30 0 0,1 80,49"
+        android:strokeWidth="3.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.55" />
+    <path
+        android:pathData="M34.1,52.5 A23,23 0 0,1 73.9,52.5"
+        android:strokeWidth="3.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.85" />
+    <!-- sole -->
+    <path
+        android:fillColor="#FFFFD166"
+        android:pathData="M38,66 A16,16 0 0,1 70,66 Z" />
+    <!-- orizzonte -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M31,66.5 h46 a1.75,1.75 0 0,1 0,3.5 h-46 a1.75,1.75 0 0,1 0,-3.5 z" />
 </vector>
