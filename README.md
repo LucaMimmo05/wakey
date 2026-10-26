@@ -7,7 +7,7 @@ App nativa in **Java**, pensata per funzionare in modo affidabile anche sui tele
 ## Funzionalità
 
 - **Più sveglie** con giorni di ripetizione, nome e suono per ognuna (suoni di sistema o un brano dal telefono)
-- **Briefing parlato** 3 secondi dopo l'inizio dello squillo:
+- **Briefing parlato** 5 secondi dopo l'inizio dello squillo:
   - ora ("Buongiorno, sono le 7 e 5")
   - meteo di oggi da [Open-Meteo](https://open-meteo.com) (cielo, temperatura, massima, minima, probabilità di pioggia) nella città in cui ti trovi: la posizione approssimativa viene letta quando apri l'app, senza bisogno del permesso "posizione sempre"
   - impegni di oggi dal calendario del telefono
@@ -41,7 +41,7 @@ Come funziona una sveglia:
 1. `AlarmScheduler` programma la sveglia con `AlarmManager.setAlarmClock` (puntuale anche in Doze) e un secondo allarme `setExactAndAllowWhileIdle` 10 minuti prima.
 2. Il secondo allarme accoda `BriefingAudioWorker` (WorkManager, expedited), che scarica il meteo, compone il testo e salva l'MP3 della voce naturale.
 3. All'orario `AlarmReceiver` avvia `AlarmService` in foreground: musica sul canale sveglia, schermata a tutto schermo anche sopra la schermata di blocco.
-4. Dopo 3 secondi la musica si abbassa e parte il briefing: l'MP3 se è stato preparato per questa sveglia, altrimenti la voce di sistema.
+4. Dopo 5 secondi la musica si abbassa e parte il briefing: l'MP3 se è stato preparato per questa sveglia, altrimenti la voce di sistema.
 5. Le sveglie ripetute si riprogrammano da sole; quelle singole si disattivano.
 
 ## Stack

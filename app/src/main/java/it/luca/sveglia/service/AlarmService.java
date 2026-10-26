@@ -72,7 +72,7 @@ public class AlarmService extends Service {
     // Limite di sicurezza per il wake lock: squillo + briefing non durano di più
     private static final long WAKE_LOCK_TIMEOUT_MS = 15 * 60 * 1000L;
     // Dopo quanto dall'inizio dello squillo parte la voce
-    private static final long BRIEFING_DELAY_MS = 3000;
+    private static final long BRIEFING_DELAY_MS = 5000;
     // Attesa massima del meteo: se la rete è lenta il briefing parte senza
     private static final long WEATHER_WAIT_SECONDS = 6;
     // Volume della musica mentre parla la voce (1 = pieno)
