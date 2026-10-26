@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Sveglia</string>
+
+    <string name="no_alarm">Nessuna sveglia impostata</string>
+    <string name="alarm_set_at">Sveglia impostata alle %1$s</string>
+    <string name="set_in_one_minute">Imposta sveglia tra 1 minuto</string>
+    <string name="pick_time">Scegli orario</string>
+    <string name="pick_time_title">Orario della sveglia</string>
+    <string name="cancel_alarm">Annulla sveglia</string>
+
+    <string name="permission_title">Permesso necessario</string>
+    <string name="permission_exact_alarm">Per suonare all\'orario esatto la sveglia ha bisogno del permesso \"Sveglie e promemoria\". Attivalo nella pagina che si aprirà.</string>
+    <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\". Attivalo nella pagina che si aprirà.</string>
+    <string name="open_settings">Apri impostazioni</string>
+
+    <string name="dismiss">Spegni</string>
+    <string name="channel_alarm">Sveglia</string>
+    <string name="notification_ringing_title">Sveglia</string>
+    <string name="notification_ringing_text">Tocca per spegnere</string>
+
+    <string name="briefing_time">Buongiorno, %1$s.</string>
+    <string name="tts_italian_missing">Voce italiana non installata: installala nelle impostazioni di sintesi vocale</string>
+</resources>
