@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         selectionBar = findViewById(R.id.selection_bar);
         selectAllCircle = findViewById(R.id.select_all_circle);
         selectionActions = findViewById(R.id.selection_actions);
-        actionToggle = findViewById(R.id.action_toggle);
+        actionToggle = findViewById(R.id.action_toggle_label);
         getOnBackPressedDispatcher().addCallback(this, exitSelection);
 
         findViewById(R.id.select_all).setOnClickListener(
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.selection_cancel).setOnClickListener(v -> adapter.endSelection());
 
         // Attiva se almeno una selezionata è spenta, altrimenti Disattiva (come Samsung)
-        actionToggle.setOnClickListener(v -> {
+        findViewById(R.id.action_toggle).setOnClickListener(v -> {
             boolean enable = anySelectedDisabled();
             for (AlarmEntity alarm : adapter.getSelected()) {
                 AlarmRepository.setEnabled(this, alarm, enable);

@@ -205,26 +205,74 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="72dp"
+            android:layout_height="68dp"
             android:orientation="horizontal">
 
-            <TextView
+            <LinearLayout
                 android:id="@+id/action_toggle"
-                style="@style/Widget.Wakey.ActionItem"
-                android:drawableTop="@drawable/ic_alarm"
-                android:text="@string/action_enable" />
+                style="@style/Widget.Wakey.ActionItem">
 
-            <TextView
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_alarm"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/action_toggle_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/action_enable"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/action_copy"
-                style="@style/Widget.Wakey.ActionItem"
-                android:drawableTop="@drawable/ic_copy"
-                android:text="@string/action_copy" />
+                style="@style/Widget.Wakey.ActionItem">
 
-            <TextView
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_copy"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/action_copy_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/action_copy"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/action_delete"
-                style="@style/Widget.Wakey.ActionItem"
-                android:drawableTop="@drawable/ic_delete"
-                android:text="@string/action_delete" />
+                style="@style/Widget.Wakey.ActionItem">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_delete"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/action_delete_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/action_delete"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
