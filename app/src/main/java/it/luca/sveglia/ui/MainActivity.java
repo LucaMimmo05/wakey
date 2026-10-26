@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 
 import it.luca.sveglia.R;
+import it.luca.sveglia.alarm.AlarmPrefs;
 import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.data.AlarmRepository;
@@ -126,9 +127,13 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
-        // Al primo avvio la guida per batteria, avvio automatico e schermata di blocco
-        if (savedInstanceState == null && !SetupSteps.wasShown(this)) {
-            startActivity(SetupActivity.intent(this));
+        // Al primo avvio: nome per il saluto, poi la guida per batteria e schermata di blocco
+        if (savedInstanceState == null) {
+            if (!AlarmPrefs.wasNameAsked(this)) {
+                startActivity(WelcomeActivity.intent(this));
+            } else if (!SetupSteps.wasShown(this)) {
+                startActivity(SetupActivity.intent(this));
+            }
         }
     }
 

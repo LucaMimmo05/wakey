@@ -18,6 +18,8 @@ public final class AlarmPrefs {
     private static final String KEY_READ_CALENDAR = "read_calendar";
     private static final String KEY_SPEECH_RATE = "speech_rate";
     private static final String KEY_SNOOZE_MINUTES = "snooze_minutes";
+    private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_NAME_ASKED = "name_asked";
 
     private AlarmPrefs() {
     }
@@ -86,6 +88,25 @@ public final class AlarmPrefs {
 
     public static void setSnoozeMinutes(Context context, int minutes) {
         prefs(context).edit().putInt(KEY_SNOOZE_MINUTES, minutes).apply();
+    }
+
+    /** Nome con cui salutare ("Buongiorno Luca"), oppure null se non è stato dato. */
+    public static String getUserName(Context context) {
+        return prefs(context).getString(KEY_USER_NAME, null);
+    }
+
+    /** Salva il nome (vuoto = nessun nome) e segna che è già stato chiesto. */
+    public static void setUserName(Context context, String name) {
+        String clean = name == null ? "" : name.trim();
+        prefs(context).edit()
+                .putString(KEY_USER_NAME, clean.isEmpty() ? null : clean)
+                .putBoolean(KEY_NAME_ASKED, true)
+                .apply();
+    }
+
+    /** true dopo che la schermata di benvenuto ha chiesto il nome (anche se l'utente ha saltato). */
+    public static boolean wasNameAsked(Context context) {
+        return prefs(context).getBoolean(KEY_NAME_ASKED, false);
     }
 
     private static SharedPreferences prefs(Context context) {

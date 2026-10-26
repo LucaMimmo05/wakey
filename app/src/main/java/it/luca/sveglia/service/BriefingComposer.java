@@ -24,6 +24,7 @@ public final class BriefingComposer {
      */
     public static String compose(Context context, int hour, int minute, LocalDate day, WeatherReport weather) {
         BriefingText.Parts parts = new BriefingText.Parts();
+        parts.name = AlarmPrefs.getUserName(context);
         parts.includeWeather = AlarmPrefs.isReadWeather(context);
         parts.weather = weather;
         if (AlarmPrefs.isReadWord(context)) {

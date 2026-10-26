@@ -3,6 +3,7 @@ package it.luca.sveglia.service;
 import java.util.List;
 
 import it.luca.sveglia.calendar.CalendarEvent;
+import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.TimeFormat;
 import it.luca.sveglia.weather.WeatherReport;
 import it.luca.sveglia.word.WordOfTheDay;
@@ -18,6 +19,8 @@ public final class BriefingText {
 
     /** Cosa leggere dopo l'orario. Le parti spente dall'utente vengono saltate. */
     public static class Parts {
+        /** Nome dell'utente per il saluto, oppure null. */
+        public String name;
         public boolean includeWeather = true;
         /** Meteo di oggi, oppure null se non disponibile (si dice "meteo non disponibile"). */
         public WeatherReport weather;
@@ -39,9 +42,12 @@ public final class BriefingText {
     }
 
     public static String build(int hour, int minute, Parts parts) {
-        StringBuilder text = new StringBuilder("Buongiorno, ")
-                .append(TimeFormat.spoken(hour, minute))
-                .append(". ");
+        // "Buongiorno Luca, sono le 7 e 5." (Buonasera se la sveglia suona di sera)
+        StringBuilder text = new StringBuilder(RelativeTime.greeting(hour));
+        if (parts.name != null && !parts.name.isEmpty()) {
+            text.append(' ').append(parts.name);
+        }
+        text.append(", ").append(TimeFormat.spoken(hour, minute)).append(". ");
 
         if (parts.includeWeather) {
             WeatherReport weather = parts.weather;

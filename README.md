@@ -8,7 +8,7 @@ App nativa in **Java**, pensata per funzionare in modo affidabile anche sui tele
 
 - **Più sveglie** con giorni di ripetizione, nome e suono per ognuna (suoni di sistema o un brano dal telefono)
 - **Briefing parlato** 5 secondi dopo l'inizio dello squillo:
-  - ora ("Buongiorno, sono le 7 e 5")
+  - saluto per nome e ora ("Buongiorno Maria, sono le 7 e 5"): il nome viene chiesto al primo avvio
   - meteo di oggi da [Open-Meteo](https://open-meteo.com) (cielo, temperatura, massima, minima, probabilità di pioggia) nella città in cui ti trovi: la posizione approssimativa viene letta quando apri l'app, senza bisogno del permesso "posizione sempre"
   - impegni di oggi dal calendario del telefono
   - parola del giorno con il suo significato

@@ -56,6 +56,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.WelcomeActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ui.RingingActivity"
             android:excludeFromRecents="true"
             android:exported="false"

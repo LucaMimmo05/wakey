@@ -35,7 +35,7 @@ public class BriefingTextTest {
     @Test
     public void singularDegree() {
         WeatherReport weather = new WeatherReport("Gallarate", "neve", -1, 2, -4, 80);
-        assertEquals("Buongiorno, è l'una e 30. Oggi a Gallarate neve, temperatura -1 grado,"
+        assertEquals("Buonanotte, è l'una e 30. Oggi a Gallarate neve, temperatura -1 grado,"
                         + " massima 2, minima -4, probabilità di pioggia 80 per cento.",
                 BriefingText.build(1, 30, weather, null));
     }
@@ -73,5 +73,14 @@ public class BriefingTextTest {
         assertEquals("Buongiorno, sono le 7. Oggi pioggia, temperatura 8 gradi, massima 10, minima 5,"
                         + " probabilità di pioggia 90 per cento.",
                 BriefingText.build(7, 0, weather, null));
+    }
+
+    @Test
+    public void greetsByNameAndTimeOfDay() {
+        BriefingText.Parts parts = new BriefingText.Parts();
+        parts.name = "Maria";
+        parts.includeWeather = false;
+        assertEquals("Buongiorno Maria, sono le 7.", BriefingText.build(7, 0, parts));
+        assertEquals("Buonasera Maria, sono le 20 e 30.", BriefingText.build(20, 30, parts));
     }
 }

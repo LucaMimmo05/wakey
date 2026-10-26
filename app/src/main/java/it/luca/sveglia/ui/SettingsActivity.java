@@ -2,7 +2,10 @@ package it.luca.sveglia.ui;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -60,11 +64,40 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
+        setupName();
         setupContents();
         setupPlace();
         setupVoice();
         setupSpeechRate();
         setupSnooze();
+    }
+
+    /** Nome per il saluto del briefing, modificabile con una finestra di dialogo. */
+    private void setupName() {
+        TextView value = findViewById(R.id.name_value);
+        String name = AlarmPrefs.getUserName(this);
+        value.setText(name != null ? name : getString(R.string.name_not_set));
+        findViewById(R.id.row_name).setOnClickListener(v -> {
+            EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME
+                    | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+            input.setText(AlarmPrefs.getUserName(this));
+            input.setSelection(input.getText().length());
+            FrameLayout box = new FrameLayout(this);
+            int pad = Math.round(24 * getResources().getDisplayMetrics().density);
+            box.setPadding(pad, pad / 2, pad, 0);
+            box.addView(input);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.your_name)
+                    .setView(box)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.save, (d, w) -> {
+                        AlarmPrefs.setUserName(this, input.getText().toString());
+                        String saved = AlarmPrefs.getUserName(this);
+                        value.setText(saved != null ? saved : getString(R.string.name_not_set));
+                    })
+                    .show();
+        });
     }
 
     private void setupContents() {

@@ -74,9 +74,10 @@ public class RingingActivity extends AppCompatActivity {
 
         LocalDateTime now = LocalDateTime.now();
         String label = getIntent().getStringExtra(EXTRA_LABEL);
-        // Il nome della sveglia, oppure il saluto se non ne ha uno
-        ((TextView) findViewById(R.id.ringing_label)).setText(
-                TextUtils.isEmpty(label) ? RelativeTime.greeting(now.getHour()) : label);
+        // Il nome della sveglia, oppure il saluto ("Buongiorno Maria") se non ne ha uno
+        String userName = AlarmPrefs.getUserName(this);
+        String greeting = RelativeTime.greeting(now.getHour()) + (userName != null ? " " + userName : "");
+        ((TextView) findViewById(R.id.ringing_label)).setText(TextUtils.isEmpty(label) ? greeting : label);
         ((TextView) findViewById(R.id.ringing_time)).setText(
                 TimeFormat.display(now.getHour(), now.getMinute()));
         ((TextView) findViewById(R.id.ringing_date)).setText(

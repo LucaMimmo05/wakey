@@ -69,6 +69,14 @@
     <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\".</string>
     <string name="open_settings">Apri impostazioni</string>
 
+    <string name="welcome_title">Ciao! Come ti chiami?</string>
+    <string name="welcome_subtitle">Ogni mattina Wakey ti saluterà per nome prima di leggerti ora, meteo e impegni.</string>
+    <string name="welcome_hint">Il tuo nome</string>
+    <string name="welcome_skip">Salta</string>
+    <string name="welcome_continue">Continua</string>
+    <string name="profile">Profilo</string>
+    <string name="your_name">Il tuo nome</string>
+    <string name="name_not_set">Non impostato</string>
     <string name="setup_title">Fai suonare Wakey\nsempre</string>
     <string name="setup_subtitle">Il telefono chiude le app per risparmiare batteria. Con questi passaggi Wakey suona anche dopo una notte a schermo spento.</string>
     <string name="setup_open">Apri</string>
