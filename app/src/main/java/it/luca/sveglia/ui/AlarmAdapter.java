@@ -10,6 +10,7 @@ import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,7 +25,11 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmScheduler;
@@ -33,7 +38,10 @@ import it.luca.sveglia.util.Days;
 import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.TimeFormat;
 
-/** Righe del gruppo sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore. */
+/**
+ * Righe del gruppo sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore.
+ * Tenendo premuta una riga si entra nella modalità selezione, come nell'Orologio Samsung.
+ */
 class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
 
     interface OnClick {
@@ -44,15 +52,90 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         void onToggle(AlarmEntity alarm, boolean enabled);
     }
 
+    interface OnSelectionChanged {
+        /** Chiamato entrando, uscendo o cambiando la selezione. */
+        void onSelectionChanged(boolean selectionMode, int selectedCount);
+    }
+
     private static final String[] DAY_LETTERS = {"L", "M", "M", "G", "V", "S", "D"};
 
     private final OnClick onClick;
     private final OnToggle onToggle;
+    private final OnSelectionChanged onSelectionChanged;
+    private boolean selectionMode;
+    private final Set<Long> selected = new HashSet<>();
 
-    AlarmAdapter(OnClick onClick, OnToggle onToggle) {
+    AlarmAdapter(OnClick onClick, OnToggle onToggle, OnSelectionChanged onSelectionChanged) {
         super(DIFF);
         this.onClick = onClick;
         this.onToggle = onToggle;
+        this.onSelectionChanged = onSelectionChanged;
+    }
+
+    boolean isSelectionMode() {
+        return selectionMode;
+    }
+
+    /** Entra in modalità selezione con una sveglia già spuntata. */
+    void startSelection(long alarmId) {
+        selectionMode = true;
+        selected.clear();
+        selected.add(alarmId);
+        refreshSelection();
+    }
+
+    void endSelection() {
+        selectionMode = false;
+        selected.clear();
+        refreshSelection();
+    }
+
+    void setAllSelected(boolean all) {
+        selected.clear();
+        if (all) {
+            for (AlarmEntity alarm : getCurrentList()) {
+                selected.add(alarm.id);
+            }
+        }
+        refreshSelection();
+    }
+
+    boolean areAllSelected() {
+        return !getCurrentList().isEmpty() && selected.size() == getCurrentList().size();
+    }
+
+    List<AlarmEntity> getSelected() {
+        List<AlarmEntity> result = new ArrayList<>();
+        for (AlarmEntity alarm : getCurrentList()) {
+            if (selected.contains(alarm.id)) {
+                result.add(alarm);
+            }
+        }
+        return result;
+    }
+
+    private void toggle(long alarmId) {
+        if (!selected.remove(alarmId)) {
+            selected.add(alarmId);
+        }
+        refreshSelection();
+    }
+
+    private void refreshSelection() {
+        notifyItemRangeChanged(0, getItemCount());
+        onSelectionChanged.onSelectionChanged(selectionMode, selected.size());
+    }
+
+    @Override
+    public void onCurrentListChanged(@NonNull List<AlarmEntity> previous, @NonNull List<AlarmEntity> current) {
+        // Sveglie eliminate nel frattempo non devono restare selezionate
+        Set<Long> ids = new HashSet<>();
+        for (AlarmEntity alarm : current) {
+            ids.add(alarm.id);
+        }
+        if (selected.retainAll(ids) && selectionMode) {
+            onSelectionChanged.onSelectionChanged(true, selected.size());
+        }
     }
 
     @NonNull
@@ -74,7 +157,24 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         holder.days.setText(alarm.isRepeating() ? dayLetters(context, alarm.days) : onceText(context, alarm));
         // Le sveglie spente restano leggibili ma più tenui
         holder.content.setAlpha(alarm.enabled ? 1f : 0.55f);
-        holder.itemView.setOnClickListener(v -> onClick.onClick(alarm));
+        holder.select.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+        holder.select.setActivated(selected.contains(alarm.id));
+        holder.enabled.setVisibility(selectionMode ? View.GONE : View.VISIBLE);
+        holder.itemView.setOnClickListener(v -> {
+            if (selectionMode) {
+                toggle(alarm.id);
+            } else {
+                onClick.onClick(alarm);
+            }
+        });
+        holder.itemView.setOnLongClickListener(v -> {
+            if (selectionMode) {
+                toggle(alarm.id);
+            } else {
+                startSelection(alarm.id);
+            }
+            return true;
+        });
         // Il listener va tolto prima di setChecked, altrimenti il riciclo delle righe lo farebbe scattare
         holder.enabled.setOnCheckedChangeListener(null);
         holder.enabled.setChecked(alarm.enabled);
@@ -115,6 +215,7 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
     }
 
     static class Holder extends RecyclerView.ViewHolder {
+        final ImageView select;
         final View content;
         final TextView label;
         final TextView time;
@@ -123,6 +224,7 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
 
         Holder(View view) {
             super(view);
+            select = view.findViewById(R.id.alarm_select);
             content = view.findViewById(R.id.alarm_content);
             label = view.findViewById(R.id.alarm_label);
             time = view.findViewById(R.id.alarm_time);

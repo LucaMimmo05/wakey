@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,6 +24,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -56,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
     private View permissionButton;
     private TextView headerTitle;
     private TextView headerSubtitle;
+    private MaterialToolbar toolbar;
+    private AlarmAdapter adapter;
+    private View selectionBar;
+    private View selectAllCircle;
+    private View selectionActions;
+    private TextView actionToggle;
     private List<AlarmEntity> alarms = Collections.emptyList();
 
     // Aggiorna "tra X ore e Y minuti" mentre la schermata è aperta
@@ -65,6 +74,14 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             updateHeader();
             handler.postDelayed(this, REFRESH_MS);
+        }
+    };
+
+    // Con la modalità selezione attiva, "indietro" la chiude invece di uscire dall'app
+    private final OnBackPressedCallback exitSelection = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            adapter.endSelection();
         }
     };
 
@@ -81,9 +98,11 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView list = findViewById(R.id.alarm_list);
         View group = findViewById(R.id.alarm_group);
         TextView empty = findViewById(R.id.empty_text);
-        AlarmAdapter adapter = new AlarmAdapter(
+        adapter = new AlarmAdapter(
                 alarm -> startActivity(AlarmEditActivity.intent(this, alarm.id)),
-                (alarm, enabled) -> AlarmRepository.setEnabled(this, alarm, enabled));
+                (alarm, enabled) -> AlarmRepository.setEnabled(this, alarm, enabled),
+                (selecting, count) -> updateSelectionUi(selecting, count));
+        setupSelection();
         list.setLayoutManager(new LinearLayoutManager(this));
         list.setAdapter(adapter);
         list.addItemDecoration(new GroupDividers(this));
@@ -122,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         params.height = Math.round(getResources().getDisplayMetrics().heightPixels * HEADER_SCREEN_RATIO);
         header.setLayoutParams(params);
 
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         toolbar.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if (id == R.id.action_add) {
@@ -164,8 +183,82 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
+    /** Tenendo premuta una sveglia: "Tutto" / "Annulla" in alto e le azioni in basso. */
+    private void setupSelection() {
+        selectionBar = findViewById(R.id.selection_bar);
+        selectAllCircle = findViewById(R.id.select_all_circle);
+        selectionActions = findViewById(R.id.selection_actions);
+        actionToggle = findViewById(R.id.action_toggle);
+        getOnBackPressedDispatcher().addCallback(this, exitSelection);
+
+        findViewById(R.id.select_all).setOnClickListener(
+                v -> adapter.setAllSelected(!adapter.areAllSelected()));
+        findViewById(R.id.selection_cancel).setOnClickListener(v -> adapter.endSelection());
+
+        // Attiva se almeno una selezionata è spenta, altrimenti Disattiva (come Samsung)
+        actionToggle.setOnClickListener(v -> {
+            boolean enable = anySelectedDisabled();
+            for (AlarmEntity alarm : adapter.getSelected()) {
+                AlarmRepository.setEnabled(this, alarm, enable);
+            }
+            adapter.endSelection();
+        });
+        findViewById(R.id.action_copy).setOnClickListener(v -> {
+            for (AlarmEntity alarm : adapter.getSelected()) {
+                AlarmRepository.duplicate(this, alarm);
+            }
+            adapter.endSelection();
+        });
+        findViewById(R.id.action_delete).setOnClickListener(v -> confirmDelete());
+    }
+
+    private void confirmDelete() {
+        List<AlarmEntity> toDelete = adapter.getSelected();
+        new MaterialAlertDialogBuilder(this)
+                .setMessage(getResources().getQuantityString(R.plurals.delete_confirm,
+                        toDelete.size(), toDelete.size()))
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.action_delete, (dialog, which) -> {
+                    for (AlarmEntity alarm : toDelete) {
+                        AlarmRepository.delete(this, alarm);
+                    }
+                    adapter.endSelection();
+                })
+                .show();
+    }
+
+    private boolean anySelectedDisabled() {
+        for (AlarmEntity alarm : adapter.getSelected()) {
+            if (!alarm.enabled) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateSelectionUi(boolean selecting, int count) {
+        exitSelection.setEnabled(selecting);
+        toolbar.setVisibility(selecting ? View.INVISIBLE : View.VISIBLE);
+        selectionBar.setVisibility(selecting ? View.VISIBLE : View.GONE);
+        selectionActions.setVisibility(selecting && count > 0 ? View.VISIBLE : View.GONE);
+        selectAllCircle.setActivated(adapter.areAllSelected());
+        actionToggle.setText(anySelectedDisabled() ? R.string.action_enable : R.string.action_disable);
+        updateHeader();
+    }
+
     /** "Sveglia tra 9 ore e 12 minuti" + "mar 27 ott, 07:00" per la sveglia attiva più vicina. */
     private void updateHeader() {
+        if (adapter != null && adapter.isSelectionMode()) {
+            int count = adapter.getSelected().size();
+            headerTitle.setText(count == 0 ? getString(R.string.select_alarms)
+                    : getResources().getQuantityString(R.plurals.selected_count, count, count));
+            headerTitle.setTextColor(MaterialColors.getColor(headerTitle, androidx.appcompat.R.attr.colorPrimary));
+            headerSubtitle.setVisibility(View.GONE);
+            return;
+        }
+        headerTitle.setTextColor(MaterialColors.getColor(headerTitle,
+                com.google.android.material.R.attr.colorOnSurface));
+        headerSubtitle.setVisibility(View.VISIBLE);
         long now = System.currentTimeMillis();
         long next = Long.MAX_VALUE;
         for (AlarmEntity alarm : alarms) {

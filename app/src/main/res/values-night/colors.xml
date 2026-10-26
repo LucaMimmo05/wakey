@@ -13,5 +13,6 @@
     <color name="ui_day_off">#FF2A2A2E</color>
     <color name="ui_saturday">#FF5C9BFF</color>
     <color name="ui_sunday">#FFFF6B6F</color>
+    <color name="ui_action_bar">#FF26262A</color>
     <color name="ui_error">#FFFF6B6F</color>
 </resources>

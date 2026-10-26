@@ -11,6 +11,16 @@
     android:paddingEnd="16dp"
     android:paddingVertical="16dp">
 
+    <!-- Cerchio di selezione, visibile solo tenendo premuta una sveglia -->
+    <ImageView
+        android:id="@+id/alarm_select"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_select_circle"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/alarm_content"
         android:layout_width="0dp"

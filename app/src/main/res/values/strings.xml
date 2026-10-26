@@ -8,6 +8,20 @@
     <string name="header_none">Nessuna sveglia attiva</string>
     <string name="header_none_hint">Tocca + per aggiungerne una</string>
     <string name="cancel">Annulla</string>
+    <string name="select_all">Tutto</string>
+    <string name="select_alarms">Seleziona sveglie</string>
+    <plurals name="selected_count">
+        <item quantity="one">%d selezionata</item>
+        <item quantity="other">%d selezionate</item>
+    </plurals>
+    <string name="action_enable">Attiva</string>
+    <string name="action_disable">Disattiva</string>
+    <string name="action_copy">Copia</string>
+    <string name="action_delete">Elimina</string>
+    <plurals name="delete_confirm">
+        <item quantity="one">Eliminare la sveglia selezionata?</item>
+        <item quantity="other">Eliminare le %d sveglie selezionate?</item>
+    </plurals>
     <string name="time_separator" translatable="false">:</string>
     <string name="once_on">Una volta · %1$s</string>
     <string name="test_alarm">Sveglia di prova tra 1 minuto</string>

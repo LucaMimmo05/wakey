@@ -45,6 +45,18 @@ public final class AlarmRepository {
         save(context, alarm);
     }
 
+    /** Crea una copia attiva della sveglia (stesso orario, giorni, suono e nome). */
+    public static void duplicate(Context context, AlarmEntity alarm) {
+        AlarmEntity copy = new AlarmEntity();
+        copy.hour = alarm.hour;
+        copy.minute = alarm.minute;
+        copy.days = alarm.days;
+        copy.soundUri = alarm.soundUri;
+        copy.label = alarm.label;
+        copy.enabled = true;
+        save(context, copy);
+    }
+
     public static void delete(Context context, AlarmEntity alarm) {
         Context app = context.getApplicationContext();
         executor.execute(() -> {
