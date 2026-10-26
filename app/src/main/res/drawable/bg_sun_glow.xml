@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Alone caldo dietro al sole della schermata di squillo -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:centerColor="#40FFD166"
+        android:endColor="#00FFD166"
+        android:gradientRadius="140dp"
+        android:startColor="#99FFD166"
+        android:type="radial" />
+</shape>

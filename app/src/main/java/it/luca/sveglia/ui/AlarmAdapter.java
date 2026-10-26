@@ -1,6 +1,12 @@
 package it.luca.sveglia.ui;
 
+import android.content.Context;
+import android.graphics.Typeface;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +17,10 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
+import java.time.DayOfWeek;
 import java.util.Objects;
 
 import it.luca.sveglia.R;
@@ -20,7 +28,7 @@ import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.util.Days;
 import it.luca.sveglia.util.TimeFormat;
 
-/** Righe della lista sveglie: orario, etichetta/giorni e interruttore. */
+/** Card della lista sveglie: etichetta, orario, giorni (L M M G V S D) e interruttore. */
 class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
 
     interface OnClick {
@@ -30,6 +38,8 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
     interface OnToggle {
         void onToggle(AlarmEntity alarm, boolean enabled);
     }
+
+    private static final String[] DAY_LETTERS = {"L", "M", "M", "G", "V", "S", "D"};
 
     private final OnClick onClick;
     private final OnToggle onToggle;
@@ -50,11 +60,14 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
     @Override
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         AlarmEntity alarm = getItem(position);
+        Context context = holder.itemView.getContext();
         holder.time.setText(TimeFormat.display(alarm.hour, alarm.minute));
         String days = Days.describe(alarm.days);
-        holder.details.setText(TextUtils.isEmpty(alarm.label) ? days
-                : holder.itemView.getContext().getString(R.string.alarm_details, alarm.label, days));
-        holder.itemView.setAlpha(alarm.enabled ? 1f : 0.6f);
+        holder.label.setText(TextUtils.isEmpty(alarm.label) ? days
+                : context.getString(R.string.alarm_details, alarm.label, days));
+        holder.days.setText(dayLetters(context, alarm.days));
+        // Le sveglie spente restano visibili ma sbiadite
+        holder.content.setAlpha(alarm.enabled ? 1f : 0.45f);
         holder.itemView.setOnClickListener(v -> onClick.onClick(alarm));
         // Il listener va tolto prima di setChecked, altrimenti il riciclo delle righe lo farebbe scattare
         holder.enabled.setOnCheckedChangeListener(null);
@@ -62,15 +75,41 @@ class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.Holder> {
         holder.enabled.setOnCheckedChangeListener((button, checked) -> onToggle.onToggle(alarm, checked));
     }
 
+    /** "L M M G V S D" con i giorni attivi in evidenza; per le sveglie singole tutti spenti. */
+    private static CharSequence dayLetters(Context context, int mask) {
+        int on = MaterialColors.getColor(context, androidx.appcompat.R.attr.colorPrimary, 0);
+        int off = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOutline, 0);
+        SpannableStringBuilder text = new SpannableStringBuilder();
+        for (int i = 0; i < 7; i++) {
+            int start = text.length();
+            text.append(DAY_LETTERS[i]);
+            boolean active = Days.contains(mask, DayOfWeek.of(i + 1));
+            text.setSpan(new ForegroundColorSpan(active ? on : off), start, text.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            if (active) {
+                text.setSpan(new StyleSpan(Typeface.BOLD), start, text.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            if (i < 6) {
+                text.append(' ');
+            }
+        }
+        return text;
+    }
+
     static class Holder extends RecyclerView.ViewHolder {
+        final View content;
+        final TextView label;
         final TextView time;
-        final TextView details;
+        final TextView days;
         final MaterialSwitch enabled;
 
         Holder(View view) {
             super(view);
+            content = view.findViewById(R.id.alarm_content);
+            label = view.findViewById(R.id.alarm_label);
             time = view.findViewById(R.id.alarm_time);
-            details = view.findViewById(R.id.alarm_details);
+            days = view.findViewById(R.id.alarm_days);
             enabled = view.findViewById(R.id.alarm_enabled);
         }
     }

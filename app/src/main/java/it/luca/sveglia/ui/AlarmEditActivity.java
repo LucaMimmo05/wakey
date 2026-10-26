@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.Space;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,33 +18,40 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.IntentCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.timepicker.MaterialTimePicker;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.concurrent.Executors;
 
 import it.luca.sveglia.R;
+import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.data.AlarmRepository;
 import it.luca.sveglia.data.AppDatabase;
 import it.luca.sveglia.util.Days;
+import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.SoundNames;
-import it.luca.sveglia.util.TimeFormat;
 
-/** Creazione e modifica di una sveglia: orario, etichetta, giorni di ripetizione e suono. */
+/**
+ * Creazione e modifica di una sveglia: orario con le rotelle (come nell'Orologio Samsung),
+ * giorni di ripetizione, etichetta e suono.
+ */
 public class AlarmEditActivity extends AppCompatActivity {
 
     private static final String EXTRA_ALARM_ID = "alarm_id";
     private static final String[] DAY_LABELS = {"L", "M", "M", "G", "V", "S", "D"};
 
     private AlarmEntity alarm;
-    private TextView timeView;
+    private WheelPicker hourWheel;
+    private WheelPicker minuteWheel;
+    private TextView ringsIn;
     private TextInputEditText labelView;
-    private ChipGroup daysGroup;
+    private final TextView[] dayViews = new TextView[7];
+    private TextView daysSummary;
     private TextView soundName;
 
     // Selettore dei suoni di sistema (suonerie, sveglie)
@@ -84,19 +93,18 @@ public class AlarmEditActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        timeView = findViewById(R.id.edit_time);
+        hourWheel = findViewById(R.id.wheel_hour);
+        minuteWheel = findViewById(R.id.wheel_minute);
+        hourWheel.setCount(24);
+        minuteWheel.setCount(60);
+        hourWheel.setOnValueChangeListener(v -> refreshRingsIn());
+        minuteWheel.setOnValueChangeListener(v -> refreshRingsIn());
+        ringsIn = findViewById(R.id.edit_rings_in);
         labelView = findViewById(R.id.edit_label);
-        daysGroup = findViewById(R.id.edit_days);
+        daysSummary = findViewById(R.id.edit_days_summary);
         soundName = findViewById(R.id.sound_name);
-        for (int i = 0; i < 7; i++) {
-            Chip chip = new Chip(this);
-            chip.setText(DAY_LABELS[i]);
-            chip.setCheckable(true);
-            chip.setTag(DayOfWeek.of(i + 1));
-            daysGroup.addView(chip);
-        }
+        buildDayToggles(findViewById(R.id.edit_days));
 
-        timeView.setOnClickListener(v -> showTimePicker());
         findViewById(R.id.button_system_sound).setOnClickListener(v -> pickSystemSound());
         findViewById(R.id.button_file_sound).setOnClickListener(
                 v -> fileSoundPicker.launch(new String[]{"audio/*"}));
@@ -126,14 +134,36 @@ public class AlarmEditActivity extends AppCompatActivity {
         }
     }
 
+    /** Sette cerchi L M M G V S D distribuiti su tutta la larghezza; un tocco li attiva/disattiva. */
+    private void buildDayToggles(LinearLayout row) {
+        for (int i = 0; i < 7; i++) {
+            if (i > 0) {
+                row.addView(new Space(this), new LinearLayout.LayoutParams(0, 1, 1f));
+            }
+            // Stile applicato come defStyleRes: cerchio, colori e dimensione del testo
+            TextView day = new TextView(this, null, 0, R.style.Widget_Wakey_DayToggle);
+            day.setText(DAY_LABELS[i]);
+            day.setOnClickListener(v -> {
+                v.setSelected(!v.isSelected());
+                refreshDaysSummary();
+                refreshRingsIn();
+            });
+            int size = getResources().getDimensionPixelSize(R.dimen.day_toggle_size);
+            row.addView(day, new LinearLayout.LayoutParams(size, size));
+            dayViews[i] = day;
+        }
+    }
+
     private void show(AlarmEntity loaded) {
         alarm = loaded;
-        refreshTime();
+        hourWheel.setValue(alarm.hour);
+        minuteWheel.setValue(alarm.minute);
         labelView.setText(alarm.label);
-        for (int i = 0; i < daysGroup.getChildCount(); i++) {
-            Chip chip = (Chip) daysGroup.getChildAt(i);
-            chip.setChecked(Days.contains(alarm.days, (DayOfWeek) chip.getTag()));
+        for (int i = 0; i < 7; i++) {
+            dayViews[i].setSelected(Days.contains(alarm.days, DayOfWeek.of(i + 1)));
         }
+        refreshDaysSummary();
+        refreshRingsIn();
         refreshSound();
         View delete = findViewById(R.id.button_delete);
         if (alarm.id != 0) {
@@ -143,21 +173,6 @@ public class AlarmEditActivity extends AppCompatActivity {
                 finish();
             });
         }
-    }
-
-    private void showTimePicker() {
-        MaterialTimePicker picker = new MaterialTimePicker.Builder()
-                .setTimeFormat(com.google.android.material.timepicker.TimeFormat.CLOCK_24H)
-                .setHour(alarm.hour)
-                .setMinute(alarm.minute)
-                .setTitleText(R.string.pick_time_title)
-                .build();
-        picker.addOnPositiveButtonClickListener(v -> {
-            alarm.hour = picker.getHour();
-            alarm.minute = picker.getMinute();
-            refreshTime();
-        });
-        picker.show(getSupportFragmentManager(), "time_picker");
     }
 
     private void pickSystemSound() {
@@ -173,21 +188,44 @@ public class AlarmEditActivity extends AppCompatActivity {
     private void save() {
         CharSequence label = labelView.getText();
         alarm.label = TextUtils.isEmpty(label) ? null : label.toString().trim();
-        int mask = 0;
-        for (int i = 0; i < daysGroup.getChildCount(); i++) {
-            Chip chip = (Chip) daysGroup.getChildAt(i);
-            if (chip.isChecked()) {
-                mask |= Days.bit((DayOfWeek) chip.getTag());
-            }
-        }
-        alarm.days = mask;
+        alarm.hour = hourWheel.getValue();
+        alarm.minute = minuteWheel.getValue();
+        alarm.days = checkedDays();
         alarm.enabled = true;
         AlarmRepository.save(this, alarm);
         finish();
     }
 
-    private void refreshTime() {
-        timeView.setText(TimeFormat.display(alarm.hour, alarm.minute));
+    private int checkedDays() {
+        int mask = 0;
+        for (int i = 0; i < 7; i++) {
+            if (dayViews[i].isSelected()) {
+                mask |= Days.bit(DayOfWeek.of(i + 1));
+            }
+        }
+        return mask;
+    }
+
+    private void refreshDaysSummary() {
+        daysSummary.setText(Days.describe(checkedDays()));
+    }
+
+    /** "Suonerà domani, tra 8 h 12 min" con l'orario e i giorni scelti in questo momento. */
+    private void refreshRingsIn() {
+        if (alarm == null) {
+            return;
+        }
+        AlarmEntity preview = new AlarmEntity();
+        preview.hour = hourWheel.getValue();
+        preview.minute = minuteWheel.getValue();
+        preview.days = checkedDays();
+        long now = System.currentTimeMillis();
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime nowTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), zone);
+        LocalDateTime when = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(AlarmScheduler.nextTrigger(preview, now)), zone);
+        ringsIn.setText(getString(R.string.rings_in,
+                RelativeTime.day(nowTime, when), RelativeTime.until(nowTime, when)));
     }
 
     private void refreshSound() {

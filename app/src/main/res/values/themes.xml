@@ -1,3 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Sveglia" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.Sveglia" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/brand_on_primary_container</item>
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorOnSecondary">@color/brand_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/brand_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/brand_on_secondary_container</item>
+        <item name="android:colorBackground">@color/brand_background</item>
+        <item name="colorOnBackground">@color/brand_on_background</item>
+        <item name="colorSurface">@color/brand_surface</item>
+        <item name="colorOnSurface">@color/brand_on_surface</item>
+        <item name="colorSurfaceVariant">@color/brand_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/brand_on_surface_variant</item>
+        <item name="colorSurfaceContainer">@color/brand_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/brand_surface_container_high</item>
+        <item name="colorSurfaceContainerLow">@color/brand_surface_container</item>
+        <item name="colorOutline">@color/brand_outline</item>
+        <item name="colorError">@color/brand_error</item>
+
+        <!-- Outfit in tutta l'app -->
+        <item name="fontFamily">@font/outfit</item>
+        <item name="android:fontFamily">@font/outfit</item>
+
+        <!-- Forme più morbide -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Wakey.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Wakey.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Wakey.Large</item>
+
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_system_bars</item>
+        <item name="materialSwitchStyle">@style/Widget.Wakey.Switch</item>
+    </style>
+
+    <!-- Schermata di squillo: sempre sfondo alba scuro, icone di sistema chiare -->
+    <style name="Theme.Sveglia.Ringing">
+        <item name="android:windowBackground">@drawable/bg_dawn</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="ShapeAppearance.Wakey.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Wakey.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Wakey.Large" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style name="Widget.Wakey.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch" />
+
+    <!-- Riquadro di una sezione (etichetta, ripeti, suono...) -->
+    <style name="Widget.Wakey.SectionCard" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="shapeAppearance">?attr/shapeAppearanceCornerLarge</item>
+        <item name="contentPadding">20dp</item>
+    </style>
+
+    <!-- Bottone principale a pillola -->
+    <style name="Widget.Wakey.PillButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">60dp</item>
+        <item name="cornerRadius">30dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+    </style>
+
+    <!-- Giorno della settimana nell'editor: cerchio grande, pieno quando attivo -->
+    <style name="Widget.Wakey.DayToggle" parent="">
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_day_toggle</item>
+        <item name="android:textColor">@color/day_toggle_text</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">@font/outfit</item>
+    </style>
+
+    <!-- Testi -->
+    <style name="TextAppearance.Wakey.Hero" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textSize">72sp</item>
+        <item name="android:fontFamily">@font/outfit</item>
+        <item name="android:textFontWeight">300</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="TextAppearance.Wakey.CardTime" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:textSize">44sp</item>
+        <item name="android:fontFamily">@font/outfit</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="TextAppearance.Wakey.Title" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/outfit</item>
+        <item name="android:textFontWeight">700</item>
+    </style>
+
+    <style name="TextAppearance.Wakey.Overline" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
 </resources>

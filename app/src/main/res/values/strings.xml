@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">Wakey</string>
 
-    <string name="no_alarms">Nessuna sveglia.\nTocca \"Nuova sveglia\" per aggiungerne una.</string>
+    <string name="no_alarms">Ancora nessuna sveglia.\nTocca \"Nuova sveglia\" per crearne una.</string>
     <string name="new_alarm">Nuova sveglia</string>
+    <string name="menu">Menu</string>
+    <string name="next_alarm">Prossima sveglia</string>
+    <string name="your_alarms">Le tue sveglie</string>
+    <string name="no_active_alarm">Nessuna sveglia</string>
+    <string name="no_active_alarm_hint">Dormi quanto vuoi</string>
+    <string name="hero_subtitle">%1$s · %2$s</string>
     <string name="test_alarm">Sveglia di prova tra 1 minuto</string>
     <string name="test_alarm_label">Prova</string>
     <string name="settings">Impostazioni</string>
@@ -22,6 +28,10 @@
     <string name="pick_file_sound">Scegli file</string>
 
     <string name="voice_label">Voce del briefing</string>
+    <string name="voice_description">La voce che ti legge ora, meteo e parola del giorno.</string>
+    <string name="hours">Ore</string>
+    <string name="minutes">Minuti</string>
+    <string name="rings_in">Suonerà %1$s, %2$s</string>
     <string name="natural_voice">Voce naturale (Google Cloud)</string>
     <string name="voice_hint">Voce</string>
     <string name="voice_key_missing">Chiave API di Google Cloud non impostata: verrà usata la voce di sistema.</string>

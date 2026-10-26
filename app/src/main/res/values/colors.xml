@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colori dell'alba, gli stessi dell'icona -->
+    <color name="dawn_night">#FF241A4F</color>
+    <color name="dawn_plum">#FF7A3B7E</color>
+    <color name="dawn_orange">#FFFF8A4C</color>
+    <color name="dawn_sun">#FFFFD166</color>
+
+    <!-- Tema chiaro: crema caldo -->
+    <color name="brand_primary">#FFD9612A</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_primary_container">#FFFFDBC9</color>
+    <color name="brand_on_primary_container">#FF3A1300</color>
+    <color name="brand_secondary">#FF6B3A78</color>
+    <color name="brand_on_secondary">#FFFFFFFF</color>
+    <color name="brand_secondary_container">#FFF2DAFF</color>
+    <color name="brand_on_secondary_container">#FF2A0838</color>
+    <color name="brand_background">#FFFFF8F3</color>
+    <color name="brand_on_background">#FF221A16</color>
+    <color name="brand_surface">#FFFFF8F3</color>
+    <color name="brand_on_surface">#FF221A16</color>
+    <color name="brand_surface_variant">#FFF5E4DA</color>
+    <color name="brand_on_surface_variant">#FF6E5A50</color>
+    <color name="brand_surface_container">#FFFCEDE4</color>
+    <color name="brand_surface_container_high">#FFF7E5DA</color>
+    <color name="brand_outline">#FFD8C2B6</color>
+    <color name="brand_error">#FFBA1A1A</color>
+</resources>

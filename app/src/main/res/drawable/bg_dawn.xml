@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sfondo alba: dal blu notte (in alto) all'arancio (in basso) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="270"
+        android:centerColor="@color/dawn_plum"
+        android:centerY="0.6"
+        android:endColor="@color/dawn_orange"
+        android:startColor="@color/dawn_night"
+        android:type="linear" />
+</shape>

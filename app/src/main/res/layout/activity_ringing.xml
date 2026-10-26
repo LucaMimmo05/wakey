@@ -1,24 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:gravity="center"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:paddingHorizontal="28dp"
+    android:paddingTop="48dp"
+    android:paddingBottom="32dp">
+
+    <TextView
+        android:id="@+id/ringing_greeting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/ringing_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:alpha="0.75"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@android:color/white" />
 
     <TextView
         android:id="@+id/ringing_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
-        android:textAppearance="?attr/textAppearanceDisplayLarge" />
+        android:layout_marginTop="24dp"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.Wakey.Hero"
+        android:textColor="@android:color/white"
+        android:textSize="104sp" />
+
+    <!-- Sole che "respira" mentre la sveglia suona -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <View
+            android:id="@+id/ringing_glow"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_sun_glow" />
+
+        <ImageView
+            android:id="@+id/ringing_sun"
+            android:layout_width="200dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_sunrise" />
+
+    </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_dismiss"
         android:layout_width="match_parent"
-        android:layout_height="88dp"
+        android:layout_height="76dp"
         android:text="@string/dismiss"
-        android:textSize="24sp" />
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textColor="@color/dawn_night"
+        app:backgroundTint="@android:color/white"
+        app:cornerRadius="38dp" />
 
 </LinearLayout>

@@ -51,6 +51,7 @@
             android:exported="false"
             android:launchMode="singleInstance"
             android:showWhenLocked="true"
+            android:theme="@style/Theme.Sveglia.Ringing"
             android:turnScreenOn="true" />
 
         <receiver

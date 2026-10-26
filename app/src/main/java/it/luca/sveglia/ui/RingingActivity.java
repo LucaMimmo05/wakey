@@ -3,20 +3,28 @@ package it.luca.sveglia.ui;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import it.luca.sveglia.R;
 import it.luca.sveglia.service.AlarmService;
+import it.luca.sveglia.util.RelativeTime;
 import it.luca.sveglia.util.TimeFormat;
 
 /**
@@ -43,9 +51,16 @@ public class RingingActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_ringing);
 
-        Calendar now = Calendar.getInstance();
+        LocalDateTime now = LocalDateTime.now();
         TextView time = findViewById(R.id.ringing_time);
-        time.setText(TimeFormat.display(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE)));
+        time.setText(TimeFormat.display(now.getHour(), now.getMinute()));
+        TextView greeting = findViewById(R.id.ringing_greeting);
+        greeting.setText(RelativeTime.greeting(now.getHour()));
+        TextView date = findViewById(R.id.ringing_date);
+        date.setText(now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.ITALIAN)));
+
+        breathe(findViewById(R.id.ringing_glow), 1.18f, 0.55f);
+        breathe(findViewById(R.id.ringing_sun), 1.06f, 1f);
 
         findViewById(R.id.button_dismiss).setOnClickListener(v -> {
             AlarmService.requestDismiss(this);
@@ -62,6 +77,19 @@ public class RingingActivity extends AppCompatActivity {
         ContextCompat.registerReceiver(this, finishedReceiver,
                 new IntentFilter(AlarmService.ACTION_RINGING_FINISHED),
                 ContextCompat.RECEIVER_NOT_EXPORTED);
+    }
+
+    /** Animazione lenta di "respiro": la vista si ingrandisce e torna, all'infinito. */
+    private static void breathe(View view, float scale, float minAlpha) {
+        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(view,
+                PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, scale),
+                PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, scale),
+                PropertyValuesHolder.ofFloat(View.ALPHA, minAlpha, 1f));
+        animator.setDuration(1600);
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.start();
     }
 
     @Override
