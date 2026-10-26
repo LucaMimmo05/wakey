@@ -38,6 +38,7 @@ import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.tts.BriefingCache;
 import it.luca.sveglia.ui.RingingActivity;
 import it.luca.sveglia.weather.WeatherReport;
+import it.luca.sveglia.weather.WeatherPlace;
 import it.luca.sveglia.weather.WeatherRepository;
 import it.luca.sveglia.util.TimeFormat;
 
@@ -134,7 +135,8 @@ public class AlarmService extends Service {
         // Il motore vocale e il meteo si preparano mentre la sveglia inizia a suonare
         speaker = new BriefingSpeaker(this, AlarmPrefs.getSpeechRate(this));
         if (AlarmPrefs.isReadWeather(this)) {
-            weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday());
+            WeatherPlace place = WeatherPlace.current(this);
+            weatherFuture = executor.submit(() -> new WeatherRepository().fetchToday(place));
         }
         scheduleBriefing(SystemClock.uptimeMillis() + BRIEFING_DELAY_MS);
     }

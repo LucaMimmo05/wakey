@@ -41,6 +41,8 @@ import it.luca.sveglia.alarm.AlarmScheduler;
 import it.luca.sveglia.data.AlarmEntity;
 import it.luca.sveglia.data.AlarmRepository;
 import it.luca.sveglia.util.RelativeTime;
+import it.luca.sveglia.weather.DeviceLocation;
+import it.luca.sveglia.weather.WeatherPlace;
 
 /**
  * Schermata principale in stile One UI: in alto un'intestazione grande con
@@ -49,6 +51,7 @@ import it.luca.sveglia.util.RelativeTime;
 public class MainActivity extends AppCompatActivity {
 
     private static final long REFRESH_MS = 30_000;
+    private static final long LOCATION_REFRESH_MS = 30 * 60 * 1000L;
     // Quota di schermo occupata dall'intestazione aperta, come nelle app Samsung
     private static final float HEADER_SCREEN_RATIO = 0.36f;
     private static final DateTimeFormatter HEADER_DATE =
@@ -173,6 +176,11 @@ public class MainActivity extends AppCompatActivity {
         if (checkPermissions()) {
             // Le sveglie salvate senza permesso non erano state programmate: si recupera ora
             AlarmRepository.rescheduleAll(this);
+        }
+        // Con l'app aperta si aggiorna la posizione per il meteo (al massimo ogni mezz'ora)
+        if (WeatherPlace.isUsingDeviceLocation(this)
+                && WeatherPlace.ageMillis(this) > LOCATION_REFRESH_MS) {
+            DeviceLocation.update(this, place -> { });
         }
         handler.post(refresh);
     }

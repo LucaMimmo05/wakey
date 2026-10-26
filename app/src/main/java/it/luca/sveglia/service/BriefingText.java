@@ -46,7 +46,8 @@ public final class BriefingText {
         if (parts.includeWeather) {
             WeatherReport weather = parts.weather;
             if (weather != null) {
-                text.append("Oggi a ").append(weather.city).append(' ').append(weather.description)
+                text.append(weather.city != null ? "Oggi a " + weather.city + " " : "Oggi ")
+                        .append(weather.description)
                         .append(", temperatura ").append(degrees(weather.temperature))
                         .append(", massima ").append(weather.max)
                         .append(", minima ").append(weather.min)

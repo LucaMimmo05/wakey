@@ -53,6 +53,13 @@
     <string name="read_calendar">Calendario</string>
     <string name="read_calendar_text">Gli impegni di oggi</string>
     <string name="calendar_denied">Senza il permesso del calendario gli impegni non possono essere letti</string>
+    <string name="weather_place">Posizione per il meteo</string>
+    <string name="use_device_location">Usa la posizione del telefono</string>
+    <string name="place_current">Meteo di %1$s</string>
+    <string name="place_unknown_city">Meteo della tua zona</string>
+    <string name="place_searching">Cerco la posizione…</string>
+    <string name="place_unavailable">Posizione non disponibile: attiva la localizzazione</string>
+    <string name="location_denied">Senza il permesso della posizione il meteo resta su Gallarate</string>
     <string name="speech_rate">Velocità della voce</string>
     <string name="snooze_duration">Durata del posticipo</string>
     <string name="snooze_option">%1$d minuti</string>

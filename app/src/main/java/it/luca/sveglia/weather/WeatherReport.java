@@ -3,6 +3,7 @@ package it.luca.sveglia.weather;
 /** Meteo di oggi già pronto per il briefing (temperature arrotondate al grado). */
 public class WeatherReport {
 
+    /** Nome della città, oppure null se sconosciuto (si dice solo "Oggi ..."). */
     public final String city;
     public final String description;
     public final int temperature;

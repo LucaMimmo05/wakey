@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Solo se l'utente attiva "Calendario" nelle impostazioni -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!-- Posizione approssimativa, solo con l'app aperta: basta per il meteo -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Ammesso per le app sveglia: chiede di escludere Wakey dall'ottimizzazione batteria -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 

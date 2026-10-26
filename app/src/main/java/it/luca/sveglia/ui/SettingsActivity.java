@@ -22,6 +22,8 @@ import it.luca.sveglia.alarm.AlarmPrefs;
 import it.luca.sveglia.calendar.CalendarReader;
 import it.luca.sveglia.tts.CloudTtsClient;
 import it.luca.sveglia.tts.Voices;
+import it.luca.sveglia.weather.DeviceLocation;
+import it.luca.sveglia.weather.WeatherPlace;
 
 /** Impostazioni: cosa legge il briefing, voce e velocità, durata del posticipo. */
 public class SettingsActivity extends AppCompatActivity {
@@ -29,6 +31,18 @@ public class SettingsActivity extends AppCompatActivity {
     private static final int[] SNOOZE_OPTIONS = {5, 10, 15};
 
     private MaterialSwitch readCalendar;
+    private MaterialSwitch deviceLocation;
+    private TextView placeText;
+
+    private final ActivityResultLauncher<String> locationPermission =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    enableDeviceLocation();
+                } else {
+                    deviceLocation.setChecked(false);
+                    Toast.makeText(this, R.string.location_denied, Toast.LENGTH_LONG).show();
+                }
+            });
 
     // Il calendario si legge solo con il permesso: se l'utente lo nega l'interruttore torna spento
     private final ActivityResultLauncher<String> calendarPermission =
@@ -47,6 +61,7 @@ public class SettingsActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
         setupContents();
+        setupPlace();
         setupVoice();
         setupSpeechRate();
         setupSnooze();
@@ -72,6 +87,42 @@ public class SettingsActivity extends AppCompatActivity {
                 calendarPermission.launch(Manifest.permission.READ_CALENDAR);
             }
         });
+    }
+
+    /** Meteo della posizione del telefono invece che di Gallarate. */
+    private void setupPlace() {
+        deviceLocation = findViewById(R.id.switch_device_location);
+        placeText = findViewById(R.id.place_text);
+        deviceLocation.setChecked(WeatherPlace.isUsingDeviceLocation(this) && DeviceLocation.hasPermission(this));
+        showPlace();
+        deviceLocation.setOnClickListener(v -> {
+            if (!deviceLocation.isChecked()) {
+                WeatherPlace.setUseDeviceLocation(this, false);
+                showPlace();
+            } else if (DeviceLocation.hasPermission(this)) {
+                enableDeviceLocation();
+            } else {
+                locationPermission.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+        });
+    }
+
+    private void enableDeviceLocation() {
+        WeatherPlace.setUseDeviceLocation(this, true);
+        placeText.setText(R.string.place_searching);
+        DeviceLocation.update(this, place -> {
+            if (place == null) {
+                placeText.setText(R.string.place_unavailable);
+            } else {
+                showPlace();
+            }
+        });
+    }
+
+    private void showPlace() {
+        WeatherPlace place = WeatherPlace.current(this);
+        placeText.setText(place.city != null ? getString(R.string.place_current, place.city)
+                : getString(R.string.place_unknown_city));
     }
 
     /** Interruttore voce naturale e scelta della voce; disattivati se manca la chiave API. */

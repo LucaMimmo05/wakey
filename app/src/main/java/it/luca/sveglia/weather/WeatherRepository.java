@@ -11,16 +11,12 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * Scarica il meteo di oggi. fetch() è bloccante: va chiamato fuori dal main thread.
- * Per ora la città è fissa (Gallarate).
+ * Scarica il meteo di oggi. fetchToday() è bloccante: va chiamato fuori dal main thread.
+ * Il posto è quello di WeatherPlace (posizione del telefono salvata, o Gallarate).
  */
 public class WeatherRepository {
 
     private static final String TAG = "WeatherRepository";
-
-    public static final String DEFAULT_CITY = "Gallarate";
-    public static final double DEFAULT_LATITUDE = 45.66;
-    public static final double DEFAULT_LONGITUDE = 8.79;
 
     // Timeout brevi: al risveglio è meglio dire "meteo non disponibile" che far aspettare
     private static final long TIMEOUT_SECONDS = 5;
@@ -41,16 +37,16 @@ public class WeatherRepository {
                 .create(WeatherApi.class);
     }
 
-    /** Meteo di oggi per la città di default, oppure null se non è disponibile (niente rete, errore, ecc.). */
-    public WeatherReport fetchToday() {
+    /** Meteo di oggi nel posto indicato, oppure null se non è disponibile (niente rete, errore, ecc.). */
+    public WeatherReport fetchToday(WeatherPlace place) {
         try {
             Response<ForecastResponse> response =
-                    api.forecast(DEFAULT_LATITUDE, DEFAULT_LONGITUDE).execute();
+                    api.forecast(place.latitude, place.longitude).execute();
             if (!response.isSuccessful() || response.body() == null) {
                 Log.w(TAG, "Risposta meteo non valida: " + response.code());
                 return null;
             }
-            return toReport(DEFAULT_CITY, response.body());
+            return toReport(place.city, response.body());
         } catch (Exception e) {
             Log.w(TAG, "Meteo non disponibile", e);
             return null;

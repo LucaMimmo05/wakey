@@ -30,6 +30,7 @@ import it.luca.sveglia.R;
 import it.luca.sveglia.alarm.AlarmPrefs;
 import it.luca.sveglia.service.BriefingComposer;
 import it.luca.sveglia.weather.WeatherReport;
+import it.luca.sveglia.weather.WeatherPlace;
 import it.luca.sveglia.weather.WeatherRepository;
 
 /**
@@ -84,7 +85,7 @@ public class BriefingAudioWorker extends Worker {
         LocalDateTime when = LocalDateTime.ofInstant(Instant.ofEpochMilli(alarmAt), ZoneId.systemDefault());
 
         // Il testo dice l'orario della sveglia, non quello di adesso (10 minuti prima)
-        WeatherReport weather = AlarmPrefs.isReadWeather(context) ? new WeatherRepository().fetchToday() : null;
+        WeatherReport weather = AlarmPrefs.isReadWeather(context) ? new WeatherRepository().fetchToday(WeatherPlace.current(context)) : null;
         String text = BriefingComposer.compose(context, when.getHour(), when.getMinute(),
                 when.toLocalDate(), weather);
 

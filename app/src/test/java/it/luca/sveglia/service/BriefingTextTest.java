@@ -66,4 +66,12 @@ public class BriefingTextTest {
         assertEquals("Buongiorno, sono le 7. Oggi non hai impegni in calendario.",
                 BriefingText.build(7, 0, parts));
     }
+
+    @Test
+    public void unknownCity() {
+        WeatherReport weather = new WeatherReport(null, "pioggia", 8, 10, 5, 90);
+        assertEquals("Buongiorno, sono le 7. Oggi pioggia, temperatura 8 gradi, massima 10, minima 5,"
+                        + " probabilità di pioggia 90 per cento.",
+                BriefingText.build(7, 0, weather, null));
+    }
 }
