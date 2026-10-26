@@ -1,73 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Squillo in stile Samsung: nero, orario grande e sottile, bottone rotondo in basso -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Squillo in stile Samsung: orario in alto, X da trascinare fuori dal cerchio per spegnere -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:paddingTop="72dp"
-    android:paddingBottom="56dp">
+    android:fitsSystemWindows="true">
 
-    <TextView
-        android:id="@+id/ringing_greeting"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceTitleLarge"
-        android:textColor="#CCFFFFFF" />
-
-    <TextView
-        android:id="@+id/ringing_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:includeFontPadding="false"
-        android:textAppearance="@style/TextAppearance.Wakey.Hero"
-        android:textColor="@android:color/white" />
-
-    <TextView
-        android:id="@+id/ringing_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="#99FFFFFF" />
-
-    <Space
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="96dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp">
+
+        <TextView
+            android:id="@+id/ringing_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="#E6FFFFFF" />
+
+        <TextView
+            android:id="@+id/ringing_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:includeFontPadding="false"
+            android:textAppearance="@style/TextAppearance.Wakey.Hero"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/ringing_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="#99FFFFFF" />
+
+    </LinearLayout>
 
     <FrameLayout
-        android:layout_width="180dp"
-        android:layout_height="180dp">
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="64dp"
+        android:clipChildren="false">
 
         <View
-            android:id="@+id/ringing_pulse"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:id="@+id/dismiss_track"
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_dismiss_track" />
+
+        <View
+            android:id="@+id/dismiss_fill"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_dismiss_fill" />
+
+        <View
+            android:id="@+id/dismiss_pulse"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center"
             android:background="@drawable/bg_dismiss_pulse" />
 
-        <ImageButton
-            android:id="@+id/button_dismiss"
-            android:layout_width="104dp"
-            android:layout_height="104dp"
+        <ImageView
+            android:id="@+id/dismiss_handle"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
             android:layout_gravity="center"
             android:background="@drawable/bg_dismiss_button"
-            android:contentDescription="@string/dismiss"
+            android:contentDescription="@string/dismiss_hint"
             android:scaleType="center"
             android:src="@drawable/ic_close"
             app:tint="@android:color/white" />
 
     </FrameLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/dismiss"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
-        android:textColor="@android:color/white" />
-
-</LinearLayout>
+</FrameLayout>

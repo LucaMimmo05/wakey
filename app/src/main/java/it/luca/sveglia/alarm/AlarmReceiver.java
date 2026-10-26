@@ -37,7 +37,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     return;
                 }
                 ContextCompat.startForegroundService(app,
-                        AlarmService.ringIntent(app, alarm.id, alarm.soundUri));
+                        AlarmService.ringIntent(app, alarm.id, alarm.soundUri, alarm.label));
                 AlarmRepository.afterRingNow(app, alarm);
             } finally {
                 pending.finish();

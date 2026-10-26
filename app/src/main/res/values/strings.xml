@@ -66,6 +66,7 @@
     <string name="setup_samsung_text">Batteria → Senza limitazioni. Se Wakey è tra le \"App in sospensione\", toglila.</string>
 
     <string name="dismiss">Spegni</string>
+    <string name="dismiss_hint">Trascina la X fuori dal cerchio per spegnere la sveglia</string>
     <string name="channel_alarm">Sveglia</string>
     <string name="channel_prefetch">Preparazione briefing</string>
     <string name="notification_prefetch">Preparo il briefing…</string>

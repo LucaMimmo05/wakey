@@ -54,6 +54,7 @@ public class AlarmService extends Service {
     public static final String ACTION_DISMISS = "it.luca.sveglia.action.DISMISS";
     private static final String EXTRA_ALARM_ID = "alarm_id";
     private static final String EXTRA_SOUND_URI = "sound_uri";
+    private static final String EXTRA_LABEL = "label";
     /** Inviato all'interno dell'app per chiudere la schermata di squillo. */
     public static final String ACTION_RINGING_FINISHED = "it.luca.sveglia.action.RINGING_FINISHED";
 
@@ -88,14 +89,15 @@ public class AlarmService extends Service {
         if (ACTION_DISMISS.equals(action)) {
             dismiss();
         } else if (intent != null) {
-            ring(intent.getLongExtra(EXTRA_ALARM_ID, 0), intent.getStringExtra(EXTRA_SOUND_URI));
+            ring(intent.getLongExtra(EXTRA_ALARM_ID, 0), intent.getStringExtra(EXTRA_SOUND_URI),
+                    intent.getStringExtra(EXTRA_LABEL));
         }
         return START_NOT_STICKY;
     }
 
-    private void ring(long alarmId, String soundUri) {
+    private void ring(long alarmId, String soundUri, String label) {
         // startForeground va chiamato subito, altrimenti il sistema chiude il servizio
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildRingingNotification(),
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildRingingNotification(label),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
         if (ringing) {
             return;
@@ -285,9 +287,9 @@ public class AlarmService extends Service {
         super.onDestroy();
     }
 
-    private Notification buildRingingNotification() {
+    private Notification buildRingingNotification(String label) {
         createChannel();
-        Intent fullScreen = new Intent(this, RingingActivity.class)
+        Intent fullScreen = RingingActivity.intent(this, label)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         PendingIntent fullScreenPi = PendingIntent.getActivity(this, 0, fullScreen,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -319,11 +321,12 @@ public class AlarmService extends Service {
     }
 
     /** Intent per far suonare la sveglia alarmId con il suono indicato (null = predefinito). */
-    public static Intent ringIntent(Context context, long alarmId, String soundUri) {
+    public static Intent ringIntent(Context context, long alarmId, String soundUri, String label) {
         return new Intent(context, AlarmService.class)
                 .setAction(ACTION_RING)
                 .putExtra(EXTRA_ALARM_ID, alarmId)
-                .putExtra(EXTRA_SOUND_URI, soundUri);
+                .putExtra(EXTRA_SOUND_URI, soundUri)
+                .putExtra(EXTRA_LABEL, label);
     }
 
     /** Avvia lo spegnimento della sveglia (usato dalla schermata di squillo). */
