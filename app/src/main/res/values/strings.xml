@@ -37,6 +37,20 @@
     <string name="permission_full_screen">Per mostrare la sveglia sopra la schermata di blocco serve il permesso \"Notifiche a schermo intero\".</string>
     <string name="open_settings">Apri impostazioni</string>
 
+    <string name="setup_title">Fai suonare Wakey\nsempre</string>
+    <string name="setup_subtitle">Il telefono chiude le app per risparmiare batteria. Con questi passaggi Wakey suona anche dopo una notte a schermo spento.</string>
+    <string name="setup_open">Apri</string>
+    <string name="setup_done">Fatto</string>
+    <string name="setup_menu">Affidabilità sveglia</string>
+    <string name="setup_battery_title">Batteria senza limitazioni</string>
+    <string name="setup_battery_text">Consenti a Wakey di restare attiva in background.</string>
+    <string name="setup_autostart_title">Avvio automatico</string>
+    <string name="setup_autostart_text">Attiva Wakey nell\'elenco, così riparte dopo un riavvio.</string>
+    <string name="setup_lockscreen_title">Schermata di blocco</string>
+    <string name="setup_lockscreen_text">Attiva \"Mostra sulla schermata di blocco\" e \"Apri nuove finestre in background\".</string>
+    <string name="setup_samsung_title">Mai in sospensione</string>
+    <string name="setup_samsung_text">Batteria → Senza limitazioni. Se Wakey è tra le \"App in sospensione\", toglila.</string>
+
     <string name="dismiss">Spegni</string>
     <string name="channel_alarm">Sveglia</string>
     <string name="channel_prefetch">Preparazione briefing</string>

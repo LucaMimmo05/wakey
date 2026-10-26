@@ -104,6 +104,10 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
+        // Al primo avvio la guida per batteria, avvio automatico e schermata di blocco
+        if (savedInstanceState == null && !SetupSteps.wasShown(this)) {
+            startActivity(SetupActivity.intent(this));
+        }
     }
 
     /**
@@ -125,6 +129,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(AlarmEditActivity.intent(this, 0));
             } else if (id == R.id.action_test_alarm) {
                 addTestAlarm();
+            } else if (id == R.id.action_setup) {
+                startActivity(SetupActivity.intent(this));
             } else if (id == R.id.action_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
             } else {

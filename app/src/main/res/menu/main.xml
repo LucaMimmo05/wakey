@@ -11,6 +11,10 @@
         android:title="@string/test_alarm"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_setup"
+        android:title="@string/setup_menu"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:title="@string/settings"
         app:showAsAction="never" />
